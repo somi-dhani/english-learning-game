@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office English Master - 사무실 영어 학습 게임</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #dbeafe;
+    --success: #16a34a;
+    --success-light: #dcfce7;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --dept-it: #7c3aed;
+    --dept-hr: #db2777;
+    --dept-admin: #0891b2;
+    --dept-accounting: #16a34a;
+    --dept-legal: #b45309;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%);
+    min-height: 100vh;
+    color: var(--gray-800);
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== HOME SCREEN ===== */
+  #home-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .logo-area {
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 0.6s ease;
+  }
+
+  .logo-icon {
+    width: 80px; height: 80px;
+    background: white;
+    border-radius: 20px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  }
+
+  .logo-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    line-height: 1.2;
+  }
+
+  .logo-subtitle {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.8);
+    margin-top: 0.5rem;
+  }
+
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 900px;
+    animation: fadeInUp 0.6s ease 0.2s both;
+  }
+
+  .mode-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.75rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    text-align: left;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+
+  .mode-card.fill::before { background: linear-gradient(90deg, #2563eb, #7c3aed); }
+  .mode-card.choice::before { background: linear-gradient(90deg, #16a34a, #0891b2); }
+  .mode-card.correct::before { background: linear-gradient(90deg, #dc2626, #d97706); }
+  .mode-card.mixed::before { background: linear-gradient(90deg, #7c3aed, #db2777); }
+
+  .mode-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  }
+
+  .mode-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+  .mode-name { font-size: 1.15rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.4rem; }
+  .mode-desc { font-size: 0.85rem; color: var(--gray-500); line-height: 1.5; }
+
+  .mode-badge {
+    display: inline-block;
+    margin-top: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-blue { background: var(--primary-light); color: var(--primary); }
+  .badge-green { background: var(--success-light); color: var(--success); }
+  .badge-red { background: var(--danger-light); color: var(--danger); }
+  .badge-purple { background: #f3e8ff; color: #7c3aed; }
+
+  .dept-filter {
+    margin: 2rem auto 0;
+    max-width: 900px;
+    animation: fadeInUp 0.6s ease 0.4s both;
+  }
+
+  .dept-filter-title {
+    color: rgba(255,255,255,0.9);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .dept-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .dept-tag {
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    background: rgba(255,255,255,0.15);
+    color: white;
+  }
+
+  .dept-tag.active, .dept-tag:hover {
+    background: white;
+    color: var(--primary);
+  }
+
+  .dept-tag[data-dept="IT"].active { color: var(--dept-it); }
+  .dept-tag[data-dept="HR"].active { color: var(--dept-hr); }
+  .dept-tag[data-dept="Admin"].active { color: var(--dept-admin); }
+  .dept-tag[data-dept="Accounting"].active { color: var(--dept-accounting); }
+  .dept-tag[data-dept="Legal"].active { color: var(--dept-legal); }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .game-header {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .btn-back {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,0.3); }
+
+  .progress-section {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.8rem;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #34d399, #60a5fa);
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+
+  .score-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.15);
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .score-display .star { font-size: 1rem; }
+
+  .level-badge {
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+  }
+
+  .streak-badge {
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    display: none;
+  }
+  .streak-badge.visible { display: block; }
+
+  /* ===== QUESTION CARD ===== */
+  .game-content {
+    flex: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .question-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 780px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    animation: slideIn 0.35s ease;
+  }
+
+  .question-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .dept-chip {
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .dept-chip[data-dept="IT"] { background: #f3e8ff; color: var(--dept-it); }
+  .dept-chip[data-dept="HR"] { background: #fce7f3; color: var(--dept-hr); }
+  .dept-chip[data-dept="Admin"] { background: #e0f2fe; color: var(--dept-admin); }
+  .dept-chip[data-dept="Accounting"] { background: #dcfce7; color: var(--dept-accounting); }
+  .dept-chip[data-dept="Legal"] { background: #fef3c7; color: var(--dept-legal); }
+
+  .type-chip {
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--gray-100);
+    color: var(--gray-600);
+  }
+
+  .points-chip {
+    margin-left: auto;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+  }
+
+  .question-context {
+    background: var(--gray-50);
+    border-left: 3px solid var(--primary);
+    padding: 0.75rem 1rem;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+  }
+
+  .question-context strong { color: var(--primary); }
+
+  .question-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-700);
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+  }
+
+  /* EMAIL TEMPLATE */
+  .email-template {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  .email-header {
+    background: var(--gray-100);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .email-field {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+    color: var(--gray-600);
+    font-size: 0.8rem;
+  }
+
+  .email-field-label {
+    font-weight: 700;
+    color: var(--gray-500);
+    min-width: 50px;
+  }
+
+  .email-body {
+    padding: 1rem;
+    line-height: 1.8;
+    color: var(--gray-700);
+  }
+
+  .blank {
+    display: inline-block;
+    min-width: 120px;
+    border-bottom: 2px solid var(--primary);
+    padding: 0 0.25rem;
+    margin: 0 0.2rem;
+    color: var(--primary);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 3px;
+  }
+
+  .blank:hover { background: var(--primary-light); }
+  .blank.filled { color: var(--gray-800); border-bottom-color: var(--success); }
+  .blank.wrong { color: var(--danger); border-bottom-color: var(--danger); background: var(--danger-light); }
+
+  /* WORD BANK */
+  .word-bank {
+    margin-bottom: 1.5rem;
+  }
+
+  .word-bank-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6rem;
+  }
+
+  .word-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .word-chip {
+    padding: 0.4rem 0.9rem;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 2px solid transparent;
+  }
+
+  .word-chip:hover { background: var(--primary); color: white; }
+  .word-chip.used { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+  .word-chip.selected { background: var(--primary); color: white; border-color: var(--primary-dark); }
+
+  /* MULTIPLE CHOICE */
+  .choices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  @media (max-width: 480px) {
+    .choices-grid { grid-template-columns: 1fr; }
+  }
+
+  .choice-btn {
+    padding: 1rem 1.2rem;
+    background: var(--gray-50);
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    font-weight: 500;
+    transition: all 0.15s;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  .choice-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+    transform: translateY(-1px);
+  }
+
+  .choice-btn.correct {
+    border-color: var(--success);
+    background: var(--success-light);
+    color: var(--success);
+  }
+
+  .choice-btn.wrong {
+    border-color: var(--danger);
+    background: var(--danger-light);
+    color: var(--danger);
+  }
+
+  .choice-btn .choice-label {
+    display: inline-block;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    color: var(--gray-600);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    line-height: 24px;
+    margin-right: 0.6rem;
+    flex-shrink: 0;
+  }
+
+  .choice-btn.correct .choice-label { background: var(--success); color: white; }
+  .choice-btn.wrong .choice-label { background: var(--danger); color: white; }
+
+  /* ERROR CORRECTION */
+  .error-text {
+    background: var(--danger-light);
+    border: 1px solid #fca5a5;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--gray-700);
+  }
+
+  .error-word {
+    color: var(--danger);
+    font-weight: 700;
+    border-bottom: 2px dashed var(--danger);
+    cursor: pointer;
+    padding: 0 2px;
+  }
+
+  .correction-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--gray-200);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 0.5rem;
+    font-family: inherit;
+  }
+
+  .correction-input:focus { border-color: var(--primary); }
+  .correction-input.correct { border-color: var(--success); background: var(--success-light); }
+  .correction-input.wrong { border-color: var(--danger); background: var(--danger-light); }
+
+  /* FEEDBACK */
+  .feedback-box {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .feedback-box.correct {
+    display: block;
+    background: var(--success-light);
+    border: 1px solid #86efac;
+    color: var(--success);
+  }
+
+  .feedback-box.wrong {
+    display: block;
+    background: var(--danger-light);
+    border: 1px solid #fca5a5;
+    color: var(--danger);
+  }
+
+  .feedback-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .feedback-explanation {
+    color: var(--gray-700);
+    font-size: 0.82rem;
+  }
+
+  .hint-box {
+    background: var(--warning-light);
+    border: 1px solid #fcd34d;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.82rem;
+    color: var(--warning);
+    display: none;
+  }
+
+  .hint-box.visible { display: block; }
+
+  /* ACTION BUTTONS */
+  .action-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.7rem 1.5rem;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    flex: 1;
+  }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+  .btn-hint {
+    background: var(--warning-light);
+    color: var(--warning);
+    border: 1px solid #fcd34d;
+  }
+  .btn-hint:hover { background: #fde68a; }
+
+  .btn-next {
+    background: var(--success);
+    color: white;
+    flex: 1;
+    display: none;
+  }
+  .btn-next:hover { background: #15803d; transform: translateY(-1px); }
+  .btn-next.visible { display: block; }
+
+  /* ===== RESULT SCREEN ===== */
+  #result-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .result-card {
+    background: white;
+    border-radius: 24px;
+    padding: 2.5rem;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: fadeInUp 0.5s ease;
+  }
+
+  .result-trophy {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounce 0.5s ease 0.3s both;
+  }
+
+  .result-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--gray-800);
+    margin-bottom: 0.5rem;
+  }
+
+  .result-subtitle {
+    font-size: 0.9rem;
+    color: var(--gray-500);
+    margin-bottom: 2rem;
+  }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-box {
+    background: var(--gray-50);
+    border-radius: 12px;
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  .result-bar-section {
+    text-align: left;
+    margin-bottom: 1.5rem;
+  }
+
+  .result-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-bottom: 0.4rem;
+  }
+
+  .result-bar-bg {
+    height: 10px;
+    background: var(--gray-200);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .result-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 1s ease 0.5s;
+    background: linear-gradient(90deg, var(--primary), #7c3aed);
+  }
+
+  .level-up-badge {
+    display: none;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin: 0 auto 1.5rem;
+    animation: pulse 1s ease infinite;
+  }
+
+  .level-up-badge.visible { display: inline-block; }
+
+  .result-message {
+    background: var(--primary-light);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--primary-dark);
+    text-align: left;
+    line-height: 1.6;
+  }
+
+  .result-buttons {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .btn-retry {
+    flex: 1;
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: 2px solid var(--gray-200);
+    padding: 0.8rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn-retry:hover { background: var(--gray-200); }
+
+  .btn-home {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.8rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn-home:hover { background: var(--primary-dark); }
+
+  /* ===== VOCAB POPUP ===== */
+  .vocab-popup {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1.5rem;
+  }
+
+  .vocab-popup.open { display: flex; }
+
+  .vocab-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.75rem;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    animation: popIn 0.25s ease;
+  }
+
+  .vocab-word {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .vocab-pronunciation {
+    font-size: 0.85rem;
+    color: var(--gray-400);
+    margin-bottom: 0.75rem;
+    font-style: italic;
+  }
+
+  .vocab-meaning {
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  .vocab-examples {
+    background: var(--gray-50);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .vocab-example {
+    font-size: 0.82rem;
+    color: var(--gray-600);
+    line-height: 1.7;
+    border-left: 3px solid var(--primary);
+    padding-left: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .vocab-example:last-child { margin-bottom: 0; }
+
+  .vocab-close {
+    width: 100%;
+    padding: 0.7rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+  .vocab-close:hover { background: var(--primary-dark); }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--gray-800);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    z-index: 200;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+  @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+  /* ===== SCORE ANIMATION ===== */
+  .score-pop {
+    position: fixed;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fbbf24;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    pointer-events: none;
+    z-index: 300;
+    animation: scorePop 1s ease forwards;
+  }
+
+  @keyframes scorePop {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+  }
+
+  /* ===== VOCABULARY GLOSSARY BUTTON ===== */
+  .vocab-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    transition: all 0.2s;
+    z-index: 50;
+  }
+  .vocab-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5); }
+</style>
+</head>
+<body>
+
+<!-- HOME SCREEN -->
+<div id="home-screen" class="screen active">
+  <div class="logo-area">
+    <div class="logo-icon">📧</div>
+    <div class="logo-title">Office English Master</div>
+    <div class="logo-subtitle">사무실 운영 관리자를 위한 비즈니스 영어 학습</div>
+  </div>
+
+  <div class="mode-grid">
+    <div class="mode-card fill" onclick="startGame('fill')">
+      <div class="mode-icon">✏️</div>
+      <div class="mode-name">이메일 빈칸 채우기</div>
+      <div class="mode-desc">실제 업무 이메일 형식에서 빠진 표현을 단어 뱅크에서 선택하세요.</div>
+      <span class="mode-badge badge-blue">Fill in the Blank</span>
+    </div>
+    <div class="mode-card choice" onclick="startGame('choice')">
+      <div class="mode-icon">🎯</div>
+      <div class="mode-name">상황별 표현 고르기</div>
+      <div class="mode-desc">업무 상황에 맞는 가장 적절한 표현을 4지선다로 선택하세요.</div>
+      <span class="mode-badge badge-green">Multiple Choice</span>
+    </div>
+    <div class="mode-card correct" onclick="startGame('correct')">
+      <div class="mode-icon">🔍</div>
+      <div class="mode-name">틀린 표현 교정하기</div>
+      <div class="mode-desc">이메일/메신저 내 문법 오류나 부적절한 표현을 찾아 고치세요.</div>
+      <span class="mode-badge badge-red">Error Correction</span>
+    </div>
+    <div class="mode-card mixed" onclick="startGame('mixed')">
+      <div class="mode-icon">🏆</div>
+      <div class="mode-name">종합 도전 모드</div>
+      <div class="mode-desc">모든 유형이 섞인 종합 테스트. 레벨업을 위한 최고의 도전!</div>
+      <span class="mode-badge badge-purple">Mixed Challenge</span>
+    </div>
+  </div>
+
+  <div class="dept-filter">
+    <div class="dept-filter-title">부서 선택 (복수 선택 가능)</div>
+    <div class="dept-tags">
+      <div class="dept-tag active" data-dept="ALL" onclick="toggleDept(this)">🌐 전체</div>
+      <div class="dept-tag" data-dept="IT" onclick="toggleDept(this)">💻 IT</div>
+      <div class="dept-tag" data-dept="HR" onclick="toggleDept(this)">👥 HR</div>
+      <div class="dept-tag" data-dept="Admin" onclick="toggleDept(this)">🏢 Admin</div>
+      <div class="dept-tag" data-dept="Accounting" onclick="toggleDept(this)">💰 Accounting</div>
+      <div class="dept-tag" data-dept="Legal" onclick="toggleDept(this)">⚖️ Legal</div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <button class="btn-back" onclick="goHome()">← 홈으로</button>
+    <div class="progress-section">
+      <div class="progress-info">
+        <span id="progress-text">문제 1 / 10</span>
+        <span id="mode-label">빈칸 채우기</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+      </div>
+    </div>
+    <div class="score-display">
+      <span class="star">⭐</span>
+      <span id="score-display">0</span>
+    </div>
+    <div class="level-badge" id="level-badge">Lv.1</div>
+    <div class="streak-badge" id="streak-badge">🔥 0연속</div>
+  </div>
+
+  <div class="game-content">
+    <div class="question-card" id="question-card">
+      <!-- Dynamically filled -->
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="result-screen" class="screen">
+  <div class="result-card">
+    <div class="result-trophy" id="result-trophy">🏆</div>
+    <div class="result-title" id="result-title">훌륭합니다!</div>
+    <div class="result-subtitle" id="result-subtitle">중급 비즈니스 영어 도전 완료</div>
+
+    <div class="result-stats">
+      <div class="stat-box">
+        <div class="stat-number" id="stat-score">0</div>
+        <div class="stat-label">총 점수</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-correct">0</div>
+        <div class="stat-label">정답 수</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-pct">0%</div>
+        <div class="stat-label">정답률</div>
+      </div>
+    </div>
+
+    <div class="result-bar-section">
+      <div class="result-bar-label">
+        <span>달성도</span>
+        <span id="bar-label">0%</span>
+      </div>
+      <div class="result-bar-bg">
+        <div class="result-bar-fill" id="result-bar" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <div class="level-up-badge" id="level-up-badge">🎉 레벨업! Lv.1 → Lv.2</div>
+
+    <div class="result-message" id="result-message"></div>
+
+    <div class="result-buttons">
+      <button class="btn-retry" onclick="retryGame()">🔄 다시 도전</button>
+      <button class="btn-home" onclick="goHome()">🏠 홈으로</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOCABULARY POPUP -->
+<div class="vocab-popup" id="vocab-popup" onclick="closeVocab(event)">
+  <div class="vocab-card" id="vocab-card">
+    <div class="vocab-word" id="vocab-word"></div>
+    <div class="vocab-pronunciation" id="vocab-pronunciation"></div>
+    <div class="vocab-meaning" id="vocab-meaning"></div>
+    <div class="vocab-examples" id="vocab-examples"></div>
+    <button class="vocab-close" onclick="closeVocabDirect()">닫기</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- VOCAB GLOSSARY BUTTON -->
+<button class="vocab-btn" onclick="showRandomVocab()" id="vocab-float-btn" style="display:none">📚 단어 사전</button>
+
+<script>
+// =====================================================
+// DATA: QUESTIONS BANK
+// =====================================================
+const vocabulary = {
+  budget: { word: 'budget', pron: '/ˈbʌdʒɪt/', meaning: '예산 (n.) — 특정 기간의 수입과 지출 계획', examples: ['We need to stay within the annual budget.', 'The project is over budget by 20%.', 'Please submit your budget request by Friday.'] },
+  reimbursement: { word: 'reimbursement', pron: '/ˌriːɪmˈbɜːrsmənt/', meaning: '비용 환급/상환 (n.) — 지출한 비용을 돌려받는 것', examples: ['Please keep receipts for reimbursement.', 'Submit your reimbursement claim within 30 days.', 'The reimbursement was processed this morning.'] },
+  timesheet: { word: 'timesheet', pron: '/ˈtaɪmʃiːt/', meaning: '근태 기록표 (n.) — 직원의 근무 시간을 기록하는 문서', examples: ['Submit your timesheet by end of day Friday.', 'Timesheets must be approved by your manager.', 'I forgot to fill in my timesheet this week.'] },
+  invoice: { word: 'invoice', pron: '/ˈɪnvɔɪs/', meaning: '청구서/송장 (n.) — 상품이나 서비스에 대한 청구 문서', examples: ['Please process the attached invoice.', 'The vendor sent us an invoice for the services.', 'We received an invoice totaling $5,000.'] },
+  compliance: { word: 'compliance', pron: '/kəmˈplaɪəns/', meaning: '컴플라이언스/법규 준수 (n.) — 규정이나 법률을 따르는 것', examples: ['This must be done in compliance with company policy.', 'Our compliance team reviewed the contract.', 'Compliance training is mandatory for all staff.'] },
+  procurement: { word: 'procurement', pron: '/prəˈkjʊərmənt/', meaning: '조달/구매 (n.) — 필요한 물품이나 서비스를 구입하는 과정', examples: ['The procurement process takes 2-3 weeks.', 'Please submit a procurement request form.', 'All equipment must go through the procurement team.'] },
+  escalate: { word: 'escalate', pron: '/ˈeskəleɪt/', meaning: '(문제를) 상급자에게 보고하다/확대하다 (v.)', examples: ["I'll escalate this to the IT manager.", 'If unresolved, we will need to escalate the issue.', 'Please escalate any urgent matters immediately.'] },
+  reconcile: { word: 'reconcile', pron: '/ˈrekənsaɪl/', meaning: '(계정을) 대사하다/일치시키다 (v.)', examples: ['We need to reconcile the accounts by month-end.', 'Please reconcile your expense report with receipts.', 'The figures do not reconcile with our records.'] },
+  vendor: { word: 'vendor', pron: '/ˈvendər/', meaning: '벤더/공급업체 (n.) — 제품이나 서비스를 제공하는 외부 회사', examples: ['The vendor submitted a new proposal.', 'We are evaluating three vendors for this project.', 'Please contact the vendor directly for support.'] },
+  onboarding: { word: 'onboarding', pron: '/ˈɒnbɔːrdɪŋ/', meaning: '온보딩/신규 입사 과정 (n.) — 새 직원을 회사에 적응시키는 과정', examples: ['The onboarding process takes about two weeks.', 'Please complete all onboarding paperwork today.', 'Our HR team manages the onboarding program.'] },
+};
+
+const questions = [
+  // ===== FILL IN THE BLANK =====
+  {
+    id: 1, type: 'fill', dept: 'Accounting', points: 10,
+    context: '📧 상황: 연간 예산 승인 요청 이메일을 작성하고 있습니다.',
+    question: '다음 이메일의 빈칸에 알맞은 단어를 단어 뱅크에서 선택하세요.',
+    email: {
+      to: 'finance@company.com',
+      subject: 'Budget Approval Request – Q3 Office Supplies',
+      body: `Dear Finance Team,\n\nI am writing to request [BLANK1] approval for office supplies for Q3. The estimated [BLANK2] is $3,500, which includes stationery, printer cartridges, and cleaning materials.\n\nPlease find the detailed breakdown [BLANK3]. I would appreciate your review and approval by end of this week.\n\nThank you for your [BLANK4].\n\nBest regards,\nSomi`
+    },
+    blanks: [
+      { id: 'B1', answer: 'budget', placeholder: '예산 승인' },
+      { id: 'B2', answer: 'expenditure', placeholder: '예상 지출액' },
+      { id: 'B3', answer: 'attached', placeholder: '첨부파일' },
+      { id: 'B4', answer: 'assistance', placeholder: '도움에 감사' },
+    ],
+    wordBank: ['budget', 'expenditure', 'attached', 'assistance', 'invoice', 'approval'],
+    explanation: '예산 승인 요청 이메일의 핵심 표현: "budget approval" (예산 승인), "estimated expenditure" (예상 지출), "find attached" (첨부 참조), "thank you for your assistance" (도움에 감사).'
+  },
+  {
+    id: 2, type: 'fill', dept: 'HR', points: 10,
+    context: '📧 상황: HR팀에서 타임시트 제출 안내 이메일을 보냈습니다.',
+    question: '다음 이메일의 빈칸에 알맞은 단어를 선택하세요.',
+    email: {
+      to: 'all-staff@company.com',
+      subject: 'Reminder: Timesheet Submission Deadline',
+      body: `Dear All,\n\nThis is a [BLANK1] that all timesheets for this month must be [BLANK2] by Friday, 5:00 PM.\n\nPlease ensure your timesheet accurately [BLANK3] your working hours, including any [BLANK4] or leave taken.\n\nIf you have any questions, please [BLANK5] our HR team.\n\nBest,\nHR Department`
+    },
+    blanks: [
+      { id: 'B1', answer: 'reminder', placeholder: '알림' },
+      { id: 'B2', answer: 'submitted', placeholder: '제출' },
+      { id: 'B3', answer: 'reflects', placeholder: '반영하다' },
+      { id: 'B4', answer: 'overtime', placeholder: '초과근무' },
+      { id: 'B5', answer: 'contact', placeholder: '연락하다' },
+    ],
+    wordBank: ['reminder', 'submitted', 'reflects', 'overtime', 'contact', 'deadline', 'approved'],
+    explanation: 'HR 안내 이메일 표현: "reminder" (알림/상기), "submitted by" (~까지 제출), "reflects hours" (시간을 반영하다), "overtime" (초과근무), "contact HR" (HR에 문의).'
+  },
+  {
+    id: 3, type: 'fill', dept: 'Accounting', points: 10,
+    context: '📧 상황: 직원이 출장 비용 청구를 위한 이메일을 작성합니다.',
+    question: '비용 청구 이메일의 빈칸을 채우세요.',
+    email: {
+      to: 'accounting@company.com',
+      subject: 'Expense Reimbursement Request – Business Trip to Busan',
+      body: `Hi Accounting Team,\n\nI would like to [BLANK1] a reimbursement for expenses incurred during my business trip to Busan on May 10–11.\n\nTotal [BLANK2]: KRW 285,000\n• Transportation: KRW 120,000\n• Accommodation: KRW 150,000\n• Meals: KRW 15,000\n\nAll [BLANK3] are attached to this email. Please let me know if any additional [BLANK4] is required.\n\nThank you,\nJihye`
+    },
+    blanks: [
+      { id: 'B1', answer: 'request', placeholder: '요청하다' },
+      { id: 'B2', answer: 'expenses', placeholder: '비용' },
+      { id: 'B3', answer: 'receipts', placeholder: '영수증' },
+      { id: 'B4', answer: 'documentation', placeholder: '서류' },
+    ],
+    wordBank: ['request', 'expenses', 'receipts', 'documentation', 'invoice', 'reimbursement'],
+    explanation: '비용 청구 이메일: "request a reimbursement" (환급 요청), "expenses incurred" (발생한 비용), "receipts are attached" (영수증 첨부), "additional documentation" (추가 서류).'
+  },
+  {
+    id: 4, type: 'fill', dept: 'IT', points: 10,
+    context: '📧 상황: IT팀에 장비 구매 요청 이메일을 보냅니다.',
+    question: '장비 요청 이메일의 빈칸을 완성하세요.',
+    email: {
+      to: 'it-support@company.com',
+      subject: 'Equipment Request – New Laptop for Admin Team',
+      body: `Dear IT Team,\n\nI am [BLANK1] on behalf of the Admin department to request a new laptop for our incoming staff member.\n\nRequired [BLANK2]: 15-inch laptop, minimum 16GB RAM, SSD storage\n\nCould you please [BLANK3] this through the [BLANK4] process and provide an estimated delivery timeline?\n\nKind regards,\nAdmin Office`
+    },
+    blanks: [
+      { id: 'B1', answer: 'writing', placeholder: '쓰다' },
+      { id: 'B2', answer: 'specifications', placeholder: '사양' },
+      { id: 'B3', answer: 'process', placeholder: '처리하다' },
+      { id: 'B4', answer: 'procurement', placeholder: '조달' },
+    ],
+    wordBank: ['writing', 'specifications', 'process', 'procurement', 'request', 'timeline'],
+    explanation: 'IT 장비 요청: "writing on behalf of" (~을 대표하여), "required specifications" (요구 사양), "process through procurement" (조달 프로세스를 통해 처리), "delivery timeline" (납품 일정).'
+  },
+  {
+    id: 5, type: 'fill', dept: 'Legal', points: 15,
+    context: '📧 상황: Legal팀에 계약서 검토를 요청하는 이메일입니다.',
+    question: '계약서 검토 요청 이메일의 빈칸을 채우세요.',
+    email: {
+      to: 'legal@company.com',
+      subject: 'Contract Review Request – Cleaning Services Agreement',
+      body: `Dear Legal Team,\n\nI am forwarding a service [BLANK1] from our cleaning vendor for your review. This is a 12-month [BLANK2] that covers office cleaning services across all floors.\n\nPlease pay particular attention to the [BLANK3] clause and the early [BLANK4] terms.\n\nWe would appreciate your [BLANK5] within 5 business days.\n\nThank you,\nAdmin Team`
+    },
+    blanks: [
+      { id: 'B1', answer: 'agreement', placeholder: '계약서' },
+      { id: 'B2', answer: 'contract', placeholder: '계약' },
+      { id: 'B3', answer: 'liability', placeholder: '책임' },
+      { id: 'B4', answer: 'termination', placeholder: '해지' },
+      { id: 'B5', answer: 'feedback', placeholder: '검토 의견' },
+    ],
+    wordBank: ['agreement', 'contract', 'liability', 'termination', 'feedback', 'compliance', 'clause'],
+    explanation: '법무 요청 이메일: "service agreement" (서비스 계약서), "liability clause" (책임 조항), "early termination" (조기 해지), "your feedback" (검토 의견).'
+  },
+
+  // ===== MULTIPLE CHOICE =====
+  {
+    id: 6, type: 'choice', dept: 'IT', points: 10,
+    context: '💬 상황: IT 헬프데스크 메신저에서 VPN 문제를 보고합니다.',
+    question: 'IT 직원에게 VPN이 연결되지 않는다고 보고할 때 가장 적절한 표현은?',
+    choices: [
+      { text: 'Hi, my VPN is not working. Can you help me fix it ASAP?', label: 'A' },
+      { text: 'Hello, I am experiencing connectivity issues with the VPN. Could you please assist?', label: 'B' },
+      { text: 'VPN broken. Fix now!', label: 'C' },
+      { text: 'I think maybe the VPN might possibly not be connecting correctly perhaps.', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: 비즈니스 메신저에서는 정중하고 명확한 표현이 적절합니다. "experiencing issues" (문제를 겪고 있다)는 전문적인 표현이며, "Could you please assist?" 는 공손한 도움 요청입니다. A는 "ASAP" 때문에 다소 급박하고, C는 너무 무례하며, D는 불필요하게 모호합니다.'
+  },
+  {
+    id: 7, type: 'choice', dept: 'HR', points: 10,
+    context: '💬 상황: HR팀이 전체 직원에게 의무 교육 참석을 안내합니다.',
+    question: '의무 교육 참석 안내 시 가장 적절한 표현은?',
+    choices: [
+      { text: 'You must come to the training or else!', label: 'A' },
+      { text: 'Attendance at this training session is mandatory for all employees.', label: 'B' },
+      { text: 'We hope you can try to maybe attend the training if possible.', label: 'C' },
+      { text: 'Training is happening. Come if you want.', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: "Attendance is mandatory" (참석은 의무입니다)는 명확하고 공식적인 표현입니다. 공지 이메일에서는 모호하지 않게 의무 사항을 명시해야 합니다. A는 위협적이고, C는 지나치게 불확실하며, D는 너무 캐주얼합니다.'
+  },
+  {
+    id: 8, type: 'choice', dept: 'Accounting', points: 10,
+    context: '📧 상황: 예산 초과에 대해 상급자에게 보고하는 이메일입니다.',
+    question: '예산 초과를 보고할 때 가장 적절한 표현은?',
+    choices: [
+      { text: 'We totally blew the budget. Big problem!', label: 'A' },
+      { text: 'I would like to bring to your attention that our current expenditure has exceeded the allocated budget by 15%.', label: 'B' },
+      { text: 'The budget is over. We spent too much money on things.', label: 'C' },
+      { text: 'Maybe we went a little bit over budget. Not sure exactly how much.', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: "bring to your attention" (주의를 환기시키다)는 비즈니스 이메일의 전형적인 보고 표현입니다. "expenditure has exceeded the allocated budget" (지출이 배정 예산을 초과했다)는 정확하고 전문적입니다. 수치를 명확히 제시하는 것이 중요합니다.'
+  },
+  {
+    id: 9, type: 'choice', dept: 'Admin', points: 10,
+    context: '📧 상황: 사무실 공지사항 이메일을 작성합니다. 다음 주 월요일에 에어컨 점검이 있습니다.',
+    question: '사무실 공지사항 작성 시 가장 적절한 표현은?',
+    choices: [
+      { text: 'Please be informed that air conditioning maintenance will be conducted on Monday, June 3rd, from 9:00 AM to 12:00 PM. We apologize for any inconvenience.', label: 'A' },
+      { text: 'The AC will be checked on Monday. Might be hot. Sorry!', label: 'B' },
+      { text: 'Air conditioning maintenance is scheduled for next Monday. Time unknown. Just so you know!', label: 'C' },
+      { text: 'We are doing some stuff to the air conditioning next week, we think.', label: 'D' },
+    ],
+    answer: 0,
+    explanation: '정답 A: 공지사항에는 정확한 날짜와 시간, 공식적인 표현이 필요합니다. "Please be informed" (알려드립니다), "will be conducted" (진행될 예정입니다), "We apologize for any inconvenience" (불편을 드려 죄송합니다)는 필수 공지 표현입니다.'
+  },
+  {
+    id: 10, type: 'choice', dept: 'Legal', points: 15,
+    context: '📧 상황: 계약서 검토 후 수정이 필요한 조항을 발견했습니다.',
+    question: '법무팀에 계약서 수정을 요청할 때 가장 적절한 표현은?',
+    choices: [
+      { text: 'Change Section 3. It is wrong and we do not like it.', label: 'A' },
+      { text: 'We would recommend revising Section 3.2 regarding the payment terms, as the current language may expose us to unnecessary risk.', label: 'B' },
+      { text: 'Section 3 seems a bit iffy. Can you look at it or something?', label: 'C' },
+      { text: 'The contract is mostly fine but Section 3 needs to be different from what it currently says.', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: "would recommend revising" (수정을 권장하다)는 공손하면서 구체적입니다. "regarding the payment terms" (지급 조건에 관하여)처럼 정확한 섹션과 이유를 명시하고, "expose us to unnecessary risk" (불필요한 위험에 노출)처럼 수정이 필요한 이유를 제시해야 합니다.'
+  },
+  {
+    id: 11, type: 'choice', dept: 'IT', points: 10,
+    context: '💬 상황: IT팀이 시스템 점검으로 인한 서비스 중단을 공지합니다.',
+    question: '시스템 점검 공지 시 적절한 표현은?',
+    choices: [
+      { text: 'Systems down this weekend. Deal with it.', label: 'A' },
+      { text: 'Please note that all internal systems will be unavailable this Saturday from 10 PM to 6 AM for scheduled maintenance. We recommend saving your work beforehand.', label: 'B' },
+      { text: 'We will be doing some maintenance on Saturday night or Sunday morning, not sure which.', label: 'C' },
+      { text: 'Systems might go down on the weekend sometime for maintenance perhaps.', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: IT 공지에서 "Please note" (주의 바랍니다), "will be unavailable" (이용 불가), 정확한 날짜와 시간, "scheduled maintenance" (예정된 점검), 그리고 "We recommend saving your work" (작업을 미리 저장하세요) 같은 실용적인 조언이 포함되어야 합니다.'
+  },
+  {
+    id: 12, type: 'choice', dept: 'Accounting', points: 10,
+    context: '💬 상황: 인보이스 처리 상태를 공급업체에 확인하는 메신저입니다.',
+    question: '인보이스 처리 현황 확인 시 적절한 표현은?',
+    choices: [
+      { text: 'Did you pay the invoice? We need to know.', label: 'A' },
+      { text: 'I wanted to follow up on Invoice #2341 submitted on May 10th. Could you confirm the current processing status?', label: 'B' },
+      { text: 'There is an invoice we sent. Has it been dealt with?', label: 'C' },
+      { text: 'What happened to our invoice? It was supposed to be done by now!', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: "follow up on" (후속 확인하다)은 비즈니스에서 자주 쓰이는 표현입니다. 인보이스 번호와 제출 날짜를 명확히 언급하고, "processing status" (처리 현황)을 정중하게 확인하는 것이 전문적입니다.'
+  },
+  {
+    id: 13, type: 'choice', dept: 'HR', points: 10,
+    context: '📧 상황: 직원 연간 휴가 사용 현황을 안내하는 이메일입니다.',
+    question: '연간 휴가 잔여 일수 안내 시 적절한 표현은?',
+    choices: [
+      { text: 'You still have 5 days of vacation. Use them or lose them!', label: 'A' },
+      { text: 'We would like to remind you that you have 5 remaining annual leave days. Please note that unused leave must be taken before December 31st, as carryover is not permitted.', label: 'B' },
+      { text: 'HR here. You have some vacation days left. Around 5 we think.', label: 'C' },
+      { text: 'Please use your remaining leave days. They will disappear soon.', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: 정확한 일수를 명시하고 ("5 remaining annual leave days"), 기한을 명확히 ("before December 31st"), 규정을 명시 ("carryover is not permitted" - 이월 불가)하는 것이 공식적인 HR 이메일입니다. "We would like to remind you" (상기시켜 드리고자 합니다)는 정중한 표현입니다.'
+  },
+
+  // ===== ERROR CORRECTION =====
+  {
+    id: 14, type: 'correct', dept: 'Accounting', points: 15,
+    context: '🔍 상황: 회계팀에 보낸 이메일에 오류가 있습니다.',
+    question: '다음 이메일에서 틀린 표현을 찾아 올바르게 수정하세요.',
+    errorText: 'Dear Accounting Team, I am writing to request a reimburse for my business trip expenses. Please find the receipt attached. The total amount is KRW 185,000. I hope you can process this at your earliest convenience.',
+    errorWord: 'reimburse',
+    correctAnswer: 'reimbursement',
+    hint: '"reimburse"는 동사입니다. 명사형이 필요합니다.',
+    explanation: '"reimburse"는 동사(환급하다)이므로, "request a reimburse"는 문법적으로 틀렸습니다. 동사 "request" 뒤에는 명사가 와야 하므로 명사형인 "reimbursement" (환급)을 사용해야 합니다. 올바른 표현: "request a reimbursement"'
+  },
+  {
+    id: 15, type: 'correct', dept: 'HR', points: 15,
+    context: '🔍 상황: HR 공지 이메일에서 오류를 발견했습니다.',
+    question: '다음 이메일에서 틀린 표현을 찾아 올바르게 수정하세요.',
+    errorText: 'Dear All, Please be advise that the annual performance review will take place in December. All managers are required to complete the evaluation forms by November 30th. For any inquiries, contact HR.',
+    errorWord: 'advise',
+    correctAnswer: 'advised',
+    hint: '"be" 다음에는 과거분사가 옵니다.',
+    explanation: '"Please be advise"는 문법 오류입니다. "be" 뒤에는 과거분사가 필요합니다. 올바른 표현은 "Please be advised" (알려드립니다)입니다. 이것은 공식 문서에서 자주 쓰이는 수동태 표현입니다.'
+  },
+  {
+    id: 16, type: 'correct', dept: 'IT', points: 15,
+    context: '🔍 상황: IT팀에 시스템 오류 보고 이메일을 보냈는데 표현 오류가 있습니다.',
+    question: '다음 이메일에서 틀린 표현을 찾아 올바르게 수정하세요.',
+    errorText: 'Hi IT Team, I am experiencing a issue with my computer. The screen is freezing every few minutes and I cannot access the shared drive. Could you please look into this matter at your convenient?',
+    errorWord: 'convenient',
+    correctAnswer: 'convenience',
+    hint: '"at your ~"는 명사가 와야 하는 관용 표현입니다.',
+    explanation: '"at your convenient"은 잘못된 표현입니다. "convenient"은 형용사이고, "at your"  뒤에는 명사가 와야 합니다. 올바른 표현은 "at your convenience" (편하실 때)입니다. 이것은 비즈니스 이메일에서 매우 자주 쓰이는 표현입니다.'
+  },
+  {
+    id: 17, type: 'correct', dept: 'Admin', points: 15,
+    context: '🔍 상황: 외부 업체에 보낸 공문에 오류가 있습니다.',
+    question: '다음 이메일에서 비즈니스 이메일에 부적절한 표현을 찾아 수정하세요.',
+    errorText: 'Dear Mr. Kim, Thanks for sending over the proposal. I have reviewed it with my team. We are good with most of the terms, but we need to discuss the pricing. Can we set up a call?',
+    errorWord: 'good with',
+    correctAnswer: 'satisfied with',
+    hint: '공식 비즈니스 이메일에서 "good"은 너무 캐주얼합니다.',
+    explanation: '"We are good with"는 너무 비공식적인 표현입니다. 외부 업체와의 공문에서는 "We are satisfied with" (만족합니다) 또는 "We agree with most of the terms" (대부분의 조건에 동의합니다)처럼 더 격식 있는 표현을 사용해야 합니다.'
+  },
+  {
+    id: 18, type: 'correct', dept: 'Legal', points: 20,
+    context: '🔍 상황: 계약 관련 이메일에서 법률 용어 오류가 있습니다.',
+    question: '다음 이메일에서 틀린 표현을 찾아 올바르게 수정하세요.',
+    errorText: 'Dear Legal Team, Please review the attached Non-Disclosure Arrangement before our meeting on Thursday. We need to ensure all confidentiality terms are clearly defined.',
+    errorWord: 'Arrangement',
+    correctAnswer: 'Agreement',
+    hint: '기밀 유지 문서의 정확한 명칭을 확인하세요.',
+    explanation: '"Non-Disclosure Arrangement"은 잘못된 용어입니다. 올바른 법률 용어는 "Non-Disclosure Agreement" (NDA, 비밀유지협약)입니다. 법률 문서에서는 정확한 용어 사용이 매우 중요합니다.'
+  },
+  {
+    id: 19, type: 'correct', dept: 'Accounting', points: 15,
+    context: '🔍 상황: 회계팀에 보낸 이메일에서 오류를 찾으세요.',
+    question: '다음 문장에서 틀린 단어를 올바르게 수정하세요.',
+    errorText: 'Please note that all expense reports must be reconciliated with the original receipts before submission to the Accounting department. Any discrepancies should be flagged immediately.',
+    errorWord: 'reconciliated',
+    correctAnswer: 'reconciled',
+    hint: '"reconcile"의 올바른 과거분사를 확인하세요.',
+    explanation: '"reconciliated"는 존재하지 않는 단어입니다. "reconcile"의 과거분사는 "reconciled"입니다. 올바른 표현: "must be reconciled with" (원본 영수증과 대사되어야 합니다).'
+  },
+  {
+    id: 20, type: 'correct', dept: 'HR', points: 15,
+    context: '🔍 상황: HR팀에서 보낸 온보딩 안내 이메일에 오류가 있습니다.',
+    question: '다음 이메일에서 잘못된 표현을 올바르게 수정하세요.',
+    errorText: 'Welcome to our team! As part of the onboarding process, you will be required to attend an orientation session, complete necessary paperworks, and meet your team members.',
+    errorWord: 'paperworks',
+    correctAnswer: 'paperwork',
+    hint: '"paperwork"은 불가산 명사입니다.',
+    explanation: '"paperwork"은 불가산 명사(셀 수 없는 명사)이므로 복수형 "paperworks"는 잘못된 표현입니다. 항상 "paperwork" 단수로만 사용합니다. 비슷하게 "furniture", "equipment", "information"도 불가산 명사입니다.'
+  },
+
+  // Additional mixed questions
+  {
+    id: 21, type: 'choice', dept: 'Admin', points: 10,
+    context: '📧 상황: 방문객 출입 절차를 안내하는 이메일입니다.',
+    question: '방문객에게 사무실 출입 안내 시 적절한 표현은?',
+    choices: [
+      { text: 'Come to reception and they will let you in. Bring ID.', label: 'A' },
+      { text: 'Upon arrival, please proceed to the reception desk on the ground floor. You will be required to present a valid photo ID and sign the visitor log.', label: 'B' },
+      { text: 'Go to the front desk. Show ID. Sign something.', label: 'C' },
+      { text: 'We need you to come to reception and probably show some ID when you get here.', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: "Upon arrival" (도착 시), "proceed to" (~로 이동하다), "required to present" (제시해야 합니다), "valid photo ID" (유효한 신분증), "visitor log" (방문자 대장)는 공식 방문자 안내에 적합한 표현들입니다.'
+  },
+  {
+    id: 22, type: 'fill', dept: 'Admin', points: 10,
+    context: '📧 상황: 직원들에게 사무용품 재고 요청 절차를 안내합니다.',
+    question: '사무용품 요청 안내 이메일의 빈칸을 채우세요.',
+    email: {
+      to: 'all-staff@company.com',
+      subject: 'Office Supplies Request Procedure Update',
+      body: `Dear Team,\n\nPlease be [BLANK1] that the procedure for requesting office supplies has been updated effective June 1st.\n\nAll requests must be [BLANK2] through the online portal at least 3 business days in [BLANK3]. Urgent [BLANK4] should be flagged as "Priority" in the system.\n\nFor any questions, please reach out to the Admin team.\n\nRegards,\nAdmin Office`
+    },
+    blanks: [
+      { id: 'B1', answer: 'informed', placeholder: '안내받다' },
+      { id: 'B2', answer: 'submitted', placeholder: '제출하다' },
+      { id: 'B3', answer: 'advance', placeholder: '사전에' },
+      { id: 'B4', answer: 'requests', placeholder: '요청' },
+    ],
+    wordBank: ['informed', 'submitted', 'advance', 'requests', 'approved', 'urgent', 'portal'],
+    explanation: '절차 안내 표현: "Please be informed" (안내드립니다), "submitted through" (~을 통해 제출), "in advance" (사전에), "urgent requests" (긴급 요청).'
+  },
+  {
+    id: 23, type: 'choice', dept: 'Accounting', points: 15,
+    context: '📧 상황: 예산 삭감을 팀에게 공지해야 합니다.',
+    question: '예산 삭감 공지 시 가장 전문적인 표현은?',
+    choices: [
+      { text: 'Bad news everyone. Budget is being cut. We have to spend less.', label: 'A' },
+      { text: 'I regret to inform you that due to company-wide cost reduction measures, the departmental budget for Q3 will be reduced by 20%. We ask for your understanding and cooperation.', label: 'B' },
+      { text: 'The company is cutting budgets. Our department is affected too. Sorry.', label: 'C' },
+      { text: 'Budgets got cut. Less money for us now. Do more with less!', label: 'D' },
+    ],
+    answer: 1,
+    explanation: '정답 B: 부정적인 소식을 전할 때 "I regret to inform you" (알려드리게 되어 유감입니다)로 시작하고, 이유("due to cost reduction measures"), 구체적인 수치("reduced by 20%"), 협조 요청("We ask for your understanding and cooperation")을 포함하는 것이 전문적입니다.'
+  },
+  {
+    id: 24, type: 'correct', dept: 'IT', points: 15,
+    context: '🔍 상황: IT팀에서 보안 정책 안내 이메일에 오류가 있습니다.',
+    question: '다음 문장에서 틀린 표현을 찾아 올바르게 수정하세요.',
+    errorText: 'For the purpose of data security, all employees are strictly prohibited to share their login credentials with any third party, including colleagues.',
+    errorWord: 'prohibited to share',
+    correctAnswer: 'prohibited from sharing',
+    hint: '"prohibited" 뒤에 오는 전치사를 확인하세요.',
+    explanation: '"prohibited to"는 잘못된 표현입니다. "prohibit"은 "prohibit someone from doing something" 형태로 사용합니다. 올바른 표현: "prohibited from sharing" (공유하는 것이 금지됩니다). 비슷하게: "prevent from", "stop from", "ban from".'
+  },
+  {
+    id: 25, type: 'fill', dept: 'Legal', points: 15,
+    context: '📧 상황: 법무팀이 컴플라이언스 교육 참가 요청 이메일을 보냅니다.',
+    question: '컴플라이언스 교육 안내 이메일의 빈칸을 채우세요.',
+    email: {
+      to: 'all-managers@company.com',
+      subject: 'Mandatory Compliance Training – Registration Required',
+      body: `Dear Management Team,\n\nAs part of our annual [BLANK1] requirements, all managers are required to [BLANK2] in the Compliance & Ethics training session.\n\nThis training covers updates to our data protection [BLANK3] and anti-corruption [BLANK4]. Non-[BLANK5] may result in disciplinary action.\n\nPlease register via the Learning Management System by June 15th.\n\nLegal & Compliance Team`
+    },
+    blanks: [
+      { id: 'B1', answer: 'regulatory', placeholder: '규정' },
+      { id: 'B2', answer: 'participate', placeholder: '참가하다' },
+      { id: 'B3', answer: 'policies', placeholder: '정책' },
+      { id: 'B4', answer: 'guidelines', placeholder: '지침' },
+      { id: 'B5', answer: 'compliance', placeholder: '미준수' },
+    ],
+    wordBank: ['regulatory', 'participate', 'policies', 'guidelines', 'compliance', 'mandatory', 'ethical'],
+    explanation: '컴플라이언스 교육 안내: "regulatory requirements" (규정 요건), "participate in" (~에 참가하다), "data protection policies" (데이터 보호 정책), "anti-corruption guidelines" (반부패 지침), "non-compliance" (미준수).'
+  },
+];
+
+// =====================================================
+// GAME STATE
+// =====================================================
+let state = {
+  mode: 'mixed',
+  filteredDepts: ['ALL'],
+  questions: [],
+  currentIdx: 0,
+  score: 0,
+  level: 1,
+  streak: 0,
+  correctCount: 0,
+  answered: false,
+  selectedBlank: null,
+  filledBlanks: {},
+  hintUsed: false,
+  lastMode: 'mixed',
+};
+
+const LEVEL_THRESHOLDS = [0, 100, 250, 450, 700, 1000];
+const LEVEL_NAMES = ['Beginner', 'Elementary', 'Pre-Int', 'Intermediate', 'Upper-Int', 'Advanced'];
+
+// =====================================================
+// DEPT FILTER
+// =====================================================
+function toggleDept(el) {
+  const dept = el.dataset.dept;
+  const allTag = document.querySelector('.dept-tag[data-dept="ALL"]');
+
+  if (dept === 'ALL') {
+    document.querySelectorAll('.dept-tag').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    state.filteredDepts = ['ALL'];
+    return;
+  }
+
+  allTag.classList.remove('active');
+  el.classList.toggle('active');
+
+  const active = [...document.querySelectorAll('.dept-tag.active')].map(t => t.dataset.dept);
+  if (active.length === 0) {
+    allTag.classList.add('active');
+    state.filteredDepts = ['ALL'];
+  } else {
+    state.filteredDepts = active;
+  }
+}
+
+// =====================================================
+// GAME START
+// =====================================================
+function startGame(mode) {
+  state.mode = mode;
+  state.lastMode = mode;
+  state.score = 0;
+  state.streak = 0;
+  state.correctCount = 0;
+  state.answered = false;
+  state.filledBlanks = {};
+
+  // Filter and select questions
+  let pool = questions.filter(q => {
+    if (state.filteredDepts.includes('ALL')) return true;
+    return state.filteredDepts.includes(q.dept);
+  });
+
+  if (mode !== 'mixed') {
+    pool = pool.filter(q => q.type === mode);
+  }
+
+  if (pool.length === 0) pool = questions; // fallback
+
+  // Shuffle and take up to 10
+  pool = shuffle([...pool]);
+  state.questions = pool.slice(0, Math.min(10, pool.length));
+  state.currentIdx = 0;
+
+  showScreen('game-screen');
+  document.getElementById('vocab-float-btn').style.display = 'block';
+  renderQuestion();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// =====================================================
+// RENDER QUESTION
+// =====================================================
+function renderQuestion() {
+  const q = state.questions[state.currentIdx];
+  state.answered = false;
+  state.filledBlanks = {};
+  state.selectedBlank = null;
+  state.hintUsed = false;
+
+  // Update header
+  const total = state.questions.length;
+  const current = state.currentIdx + 1;
+  document.getElementById('progress-text').textContent = `문제 ${current} / ${total}`;
+  document.getElementById('mode-label').textContent = getModeLabel(q.type);
+  document.getElementById('progress-fill').style.width = `${(state.currentIdx / total) * 100}%`;
+  document.getElementById('score-display').textContent = state.score;
+  document.getElementById('level-badge').textContent = `Lv.${state.level}`;
+
+  const streakEl = document.getElementById('streak-badge');
+  if (state.streak >= 2) {
+    streakEl.classList.add('visible');
+    streakEl.textContent = `🔥 ${state.streak}연속`;
+  } else {
+    streakEl.classList.remove('visible');
+  }
+
+  // Render card
+  const card = document.getElementById('question-card');
+  if (q.type === 'fill') {
+    card.innerHTML = renderFill(q);
+    initFillInteraction(q);
+  } else if (q.type === 'choice') {
+    card.innerHTML = renderChoice(q);
+  } else if (q.type === 'correct') {
+    card.innerHTML = renderCorrect(q);
+  }
+}
+
+function getModeLabel(type) {
+  return { fill: '빈칸 채우기', choice: '표현 고르기', correct: '오류 교정' }[type] || '종합';
+}
+
+// ===== FILL =====
+function renderFill(q) {
+  const emailLines = q.email.body.split('\n').map(line => {
+    return line.replace(/\[BLANK(\d+)\]/g, (match, num) => {
+      const blank = q.blanks[parseInt(num) - 1];
+      return `<span class="blank" id="blank-${blank.id}" data-blank="${blank.id}" onclick="selectBlank('${blank.id}')">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
+    });
+  }).join('<br>');
+
+  const wordChips = q.wordBank.map(w =>
+    `<span class="word-chip" data-word="${w}" onclick="placeWord('${w}')">${w}</span>`
+  ).join('');
+
+  return `
+    <div class="question-meta">
+      <span class="dept-chip" data-dept="${q.dept}">${q.dept}</span>
+      <span class="type-chip">✏️ 빈칸 채우기</span>
+      <span class="points-chip">+${q.points}pts</span>
+    </div>
+    <div class="question-context"><strong>상황</strong> ${q.context}</div>
+    <div class="question-title">${q.question}</div>
+
+    <div class="email-template">
+      <div class="email-header">
+        <div class="email-field"><span class="email-field-label">To:</span><span>${q.email.to}</span></div>
+        <div class="email-field"><span class="email-field-label">Subject:</span><span>${q.email.subject}</span></div>
+      </div>
+      <div class="email-body">${emailLines}</div>
+    </div>
+
+    <div class="word-bank">
+      <div class="word-bank-title">단어 뱅크 — 단어를 클릭하면 선택한 빈칸에 들어갑니다</div>
+      <div class="word-chips" id="word-chips">${wordChips}</div>
+    </div>
+
+    <div class="hint-box" id="hint-box"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+
+    <div class="action-row">
+      <button class="btn btn-hint" onclick="showHint()">💡 힌트</button>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitFill()">정답 확인</button>
+      <button class="btn btn-next" id="next-btn" onclick="nextQuestion()">다음 문제 →</button>
+    </div>
+  `;
+}
+
+function initFillInteraction(q) {
+  // Select first blank by default
+  if (q.blanks.length > 0) {
+    selectBlank(q.blanks[0].id);
+  }
+}
+
+function selectBlank(id) {
+  document.querySelectorAll('.blank').forEach(b => b.style.background = '');
+  const el = document.getElementById(`blank-${id}`);
+  if (el && !el.classList.contains('filled')) {
+    el.style.background = '#dbeafe';
+    state.selectedBlank = id;
+  }
+}
+
+function placeWord(word) {
+  if (!state.selectedBlank || state.answered) return;
+  const chip = document.querySelector(`.word-chip[data-word="${word}"]`);
+  if (chip && chip.classList.contains('used')) return;
+
+  const el = document.getElementById(`blank-${state.selectedBlank}`);
+  if (!el || el.classList.contains('filled')) return;
+
+  // Remove from previous blank if word was placed elsewhere
+  Object.entries(state.filledBlanks).forEach(([blankId, w]) => {
+    if (w === word && blankId !== state.selectedBlank) {
+      const prev = document.getElementById(`blank-${blankId}`);
+      if (prev) {
+        prev.textContent = '';
+        prev.classList.remove('filled');
+        prev.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+      }
+      delete state.filledBlanks[blankId];
+    }
+  });
+
+  state.filledBlanks[state.selectedBlank] = word;
+  el.textContent = word;
+  el.classList.add('filled');
+  el.style.background = '';
+
+  // Mark chip as selected
+  document.querySelectorAll('.word-chip').forEach(c => c.classList.remove('selected'));
+  if (chip) chip.classList.add('selected');
+
+  // Move to next empty blank
+  const q = state.questions[state.currentIdx];
+  const nextBlank = q.blanks.find(b => !state.filledBlanks[b.id] && b.id !== state.selectedBlank);
+  if (nextBlank) {
+    selectBlank(nextBlank.id);
+  } else {
+    state.selectedBlank = null;
+  }
+}
+
+function submitFill() {
+  if (state.answered) return;
+  const q = state.questions[state.currentIdx];
+
+  let allFilled = q.blanks.every(b => state.filledBlanks[b.id]);
+  if (!allFilled) {
+    showToast('모든 빈칸을 채워주세요!', 'error');
+    return;
+  }
+
+  state.answered = true;
+  let allCorrect = true;
+
+  q.blanks.forEach(b => {
+    const el = document.getElementById(`blank-${b.id}`);
+    if (state.filledBlanks[b.id] === b.answer) {
+      el.classList.add('filled');
+      el.classList.remove('wrong');
+    } else {
+      el.classList.add('wrong');
+      allCorrect = false;
+      el.title = `정답: ${b.answer}`;
+    }
+  });
+
+  // Mark word chips
+  document.querySelectorAll('.word-chip').forEach(chip => chip.classList.add('used'));
+
+  handleAnswer(allCorrect, q);
+}
+
+// ===== CHOICE =====
+function renderChoice(q) {
+  const choiceHTML = q.choices.map((c, i) =>
+    `<button class="choice-btn" onclick="submitChoice(${i})" id="choice-${i}">
+      <span class="choice-label">${c.label}</span>${c.text}
+    </button>`
+  ).join('');
+
+  return `
+    <div class="question-meta">
+      <span class="dept-chip" data-dept="${q.dept}">${q.dept}</span>
+      <span class="type-chip">🎯 표현 고르기</span>
+      <span class="points-chip">+${q.points}pts</span>
+    </div>
+    <div class="question-context"><strong>상황</strong> ${q.context}</div>
+    <div class="question-title">${q.question}</div>
+
+    <div class="choices-grid">${choiceHTML}</div>
+
+    <div class="hint-box" id="hint-box"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+
+    <div class="action-row">
+      <button class="btn btn-hint" onclick="showChoiceHint()">💡 힌트</button>
+      <button class="btn btn-next" id="next-btn" onclick="nextQuestion()">다음 문제 →</button>
+    </div>
+  `;
+}
+
+function submitChoice(idx) {
+  if (state.answered) return;
+  state.answered = true;
+
+  const q = state.questions[state.currentIdx];
+  const isCorrect = idx === q.answer;
+
+  document.querySelectorAll('.choice-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.answer) btn.classList.add('correct');
+    else if (i === idx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  handleAnswer(isCorrect, q);
+}
+
+// ===== CORRECT =====
+function renderCorrect(q) {
+  const highlighted = q.errorText.replace(
+    q.errorWord,
+    `<span class="error-word" title="이 부분을 수정하세요">${q.errorWord}</span>`
+  );
+
+  return `
+    <div class="question-meta">
+      <span class="dept-chip" data-dept="${q.dept}">${q.dept}</span>
+      <span class="type-chip">🔍 오류 교정</span>
+      <span class="points-chip">+${q.points}pts</span>
+    </div>
+    <div class="question-context"><strong>상황</strong> ${q.context}</div>
+    <div class="question-title">${q.question}</div>
+
+    <div class="error-text">${highlighted}</div>
+
+    <input type="text"
+      class="correction-input"
+      id="correction-input"
+      placeholder='밑줄 친 부분의 올바른 표현을 입력하세요...'
+      onkeydown="if(event.key==='Enter') submitCorrect()"
+    >
+
+    <div class="hint-box" id="hint-box"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+
+    <div class="action-row">
+      <button class="btn btn-hint" onclick="showCorrectHint()">💡 힌트</button>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitCorrect()">정답 확인</button>
+      <button class="btn btn-next" id="next-btn" onclick="nextQuestion()">다음 문제 →</button>
+    </div>
+  `;
+}
+
+function submitCorrect() {
+  if (state.answered) return;
+  const q = state.questions[state.currentIdx];
+  const input = document.getElementById('correction-input');
+  const answer = input.value.trim();
+
+  if (!answer) {
+    showToast('정답을 입력해주세요!', 'error');
+    return;
+  }
+
+  state.answered = true;
+  const isCorrect = answer.toLowerCase() === q.correctAnswer.toLowerCase();
+
+  input.classList.add(isCorrect ? 'correct' : 'wrong');
+  input.disabled = true;
+  if (!isCorrect) {
+    input.value = answer + `  →  정답: ${q.correctAnswer}`;
+  }
+
+  handleAnswer(isCorrect, q);
+}
+
+// =====================================================
+// ANSWER HANDLER
+// =====================================================
+function handleAnswer(isCorrect, q) {
+  const points = isCorrect ? (state.hintUsed ? Math.floor(q.points * 0.5) : q.points) : 0;
+  const feedback = document.getElementById('feedback-box');
+  const nextBtn = document.getElementById('next-btn');
+
+  if (isCorrect) {
+    state.score += points;
+    state.streak++;
+    state.correctCount++;
+
+    feedback.className = 'feedback-box correct';
+    feedback.innerHTML = `
+      <div class="feedback-title">✅ 정답입니다! +${points}점</div>
+      <div class="feedback-explanation">${q.explanation}</div>
+    `;
+
+    // Score pop animation
+    showScorePop(`+${points}`);
+
+    if (state.streak >= 3) {
+      showToast(`🔥 ${state.streak}연속 정답!`, 'success');
+    }
+
+    // Level up check
+    checkLevelUp();
+  } else {
+    state.streak = 0;
+    feedback.className = 'feedback-box wrong';
+    feedback.innerHTML = `
+      <div class="feedback-title">❌ 틀렸습니다</div>
+      <div class="feedback-explanation">${q.explanation}</div>
+    `;
+  }
+
+  document.getElementById('score-display').textContent = state.score;
+
+  if (nextBtn) {
+    nextBtn.classList.add('visible');
+    const isLast = state.currentIdx >= state.questions.length - 1;
+    nextBtn.textContent = isLast ? '결과 보기 →' : '다음 문제 →';
+  }
+
+  // Hide submit button
+  const submitBtn = document.getElementById('submit-btn');
+  if (submitBtn) submitBtn.style.display = 'none';
+
+  const hintBtn = document.querySelector('.btn-hint');
+  if (hintBtn) hintBtn.style.display = 'none';
+}
+
+function checkLevelUp() {
+  const newLevel = LEVEL_THRESHOLDS.findIndex((t, i) =>
+    state.score >= t && (i === LEVEL_THRESHOLDS.length - 1 || state.score < LEVEL_THRESHOLDS[i + 1])
+  ) + 1;
+
+  if (newLevel > state.level) {
+    const oldLevel = state.level;
+    state.level = newLevel;
+    showToast(`🎉 레벨업! ${LEVEL_NAMES[oldLevel-1]} → ${LEVEL_NAMES[newLevel-1]}`, 'success');
+    document.getElementById('level-badge').textContent = `Lv.${state.level}`;
+  }
+}
+
+// =====================================================
+// HINTS
+// =====================================================
+function showHint() {
+  const q = state.questions[state.currentIdx];
+  if (state.answered) return;
+  state.hintUsed = true;
+
+  const hintBox = document.getElementById('hint-box');
+  const firstEmpty = q.blanks.find(b => !state.filledBlanks[b.id]);
+  if (firstEmpty) {
+    hintBox.textContent = `💡 힌트: "${firstEmpty.placeholder}" 의미의 영어 단어를 찾아보세요.`;
+    hintBox.classList.add('visible');
+  }
+}
+
+function showChoiceHint() {
+  const q = state.questions[state.currentIdx];
+  if (state.answered) return;
+  state.hintUsed = true;
+
+  const hintBox = document.getElementById('hint-box');
+  const wrongIdx = q.choices.findIndex((_, i) => i !== q.answer && Math.random() > 0.5);
+  const wrongChoice = q.choices[wrongIdx !== q.answer ? wrongIdx : (q.answer + 1) % 4];
+  hintBox.textContent = `💡 힌트: "${wrongChoice?.label || 'C'}"와 "${(q.answer === 3 ? 'A' : 'D')}"는 정답이 아닙니다.`;
+  hintBox.classList.add('visible');
+}
+
+function showCorrectHint() {
+  const q = state.questions[state.currentIdx];
+  if (state.answered) return;
+  state.hintUsed = true;
+
+  const hintBox = document.getElementById('hint-box');
+  hintBox.textContent = `💡 힌트: ${q.hint}`;
+  hintBox.classList.add('visible');
+}
+
+// =====================================================
+// NAVIGATION
+// =====================================================
+function nextQuestion() {
+  state.currentIdx++;
+  if (state.currentIdx >= state.questions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+    // Scroll to top of card
+    document.getElementById('question-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function showResults() {
+  const total = state.questions.length;
+  const pct = Math.round((state.correctCount / total) * 100);
+
+  document.getElementById('stat-score').textContent = state.score;
+  document.getElementById('stat-correct').textContent = `${state.correctCount}/${total}`;
+  document.getElementById('stat-pct').textContent = `${pct}%`;
+  document.getElementById('bar-label').textContent = `${pct}%`;
+
+  setTimeout(() => {
+    document.getElementById('result-bar').style.width = `${pct}%`;
+  }, 100);
+
+  // Trophy and message
+  let trophy, title, message;
+  if (pct >= 90) {
+    trophy = '🏆'; title = '완벽합니다!';
+    message = '모든 문제를 거의 다 맞추셨어요! 비즈니스 영어 실력이 매우 뛰어납니다. 특히 이메일 작성과 전문 어휘 활용 능력이 우수합니다.';
+  } else if (pct >= 70) {
+    trophy = '🥇'; title = '훌륭합니다!';
+    message = '좋은 실력을 보여주셨어요! 업무 이메일 표현에 익숙해지고 있습니다. 틀린 문제의 설명을 다시 읽어보시면 더 완벽해질 거예요.';
+  } else if (pct >= 50) {
+    trophy = '🥈'; title = '잘하셨어요!';
+    message = '절반 이상 정답을 맞추셨습니다. 비즈니스 어휘와 격식체 표현을 더 연습해 보세요. 틀린 표현의 설명을 꼭 확인하세요!';
+  } else {
+    trophy = '📚'; title = '더 연습해봐요!';
+    message = '업무 영어는 반복이 중요합니다. 각 문제의 해설을 꼼꼼히 읽고 다시 도전해보세요. 틀린 문제를 통해 더 많이 배울 수 있습니다!';
+  }
+
+  document.getElementById('result-trophy').textContent = trophy;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-message').textContent = message;
+  document.getElementById('result-subtitle').textContent =
+    `${getModeFullName(state.mode)} · ${LEVEL_NAMES[Math.min(state.level - 1, 5)]} Level`;
+
+  // Level up in result
+  const newLevel = LEVEL_THRESHOLDS.findIndex((t, i) =>
+    state.score >= t && (i === LEVEL_THRESHOLDS.length - 1 || state.score < LEVEL_THRESHOLDS[i + 1])
+  ) + 1;
+
+  if (newLevel > 1) {
+    const badge = document.getElementById('level-up-badge');
+    badge.textContent = `🎉 Lv.${newLevel} ${LEVEL_NAMES[newLevel-1]} 달성!`;
+    badge.classList.add('visible');
+  }
+
+  showScreen('result-screen');
+  document.getElementById('vocab-float-btn').style.display = 'none';
+}
+
+function getModeFullName(mode) {
+  return { fill: '이메일 빈칸 채우기', choice: '상황별 표현 고르기', correct: '오류 교정', mixed: '종합 도전' }[mode] || '학습';
+}
+
+function retryGame() {
+  startGame(state.lastMode);
+}
+
+function goHome() {
+  showScreen('home-screen');
+  document.getElementById('vocab-float-btn').style.display = 'none';
+}
+
+// =====================================================
+// VOCABULARY
+// =====================================================
+function showVocab(word) {
+  const data = vocabulary[word];
+  if (!data) return;
+
+  document.getElementById('vocab-word').textContent = data.word;
+  document.getElementById('vocab-pronunciation').textContent = data.pron;
+  document.getElementById('vocab-meaning').textContent = data.meaning;
+
+  const examples = data.examples.map(e =>
+    `<div class="vocab-example">${e}</div>`
+  ).join('');
+  document.getElementById('vocab-examples').innerHTML = examples;
+
+  document.getElementById('vocab-popup').classList.add('open');
+}
+
+function showRandomVocab() {
+  const keys = Object.keys(vocabulary);
+  const key = keys[Math.floor(Math.random() * keys.length)];
+  showVocab(key);
+}
+
+function closeVocab(e) {
+  if (e.target === document.getElementById('vocab-popup')) {
+    document.getElementById('vocab-popup').classList.remove('open');
+  }
+}
+
+function closeVocabDirect() {
+  document.getElementById('vocab-popup').classList.remove('open');
+}
+
+// =====================================================
+// UTILS
+// =====================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showToast(msg, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast ${type} show`;
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => { toast.className = 'toast'; }, 2800);
+}
+
+function showScorePop(text) {
+  const el = document.createElement('div');
+  el.className = 'score-pop';
+  el.textContent = text;
+  el.style.top = '80px';
+  el.style.left = '50%';
+  el.style.transform = 'translateX(-50%)';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1100);
+}
+</script>
+</body>
+</html>
