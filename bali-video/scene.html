@@ -15,7 +15,9 @@
 <svg id="stage" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"></svg>
 <script>
 // ---------- helpers ----------
-const W = 1080, H = 1920, BEAT = 0.5;
+const W = 1080, H = 1920, BPM = 130, BEAT = 60 / BPM, DROP = 12, FIN = DROP + 5 * BEAT;
+// 1 right on every kick of the drop, decaying fast
+const kickEnv = t => t < DROP ? 0 : Math.exp(-(((t - DROP) % BEAT) / 0.09));
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, k) => a + (b - a) * k;
 const prog = (t, a, b) => clamp((t - a) / (b - a));
@@ -445,6 +447,7 @@ const FINAL = [[40, 75], [175, -5], 18, -6]; // hand on hip + point to sky
 
 function scene5(t) {
   const lt = t - 12;
+  const finalOn = t >= FIN;
   let g = `<defs><linearGradient id="bg5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b0f54"/><stop offset=".55" stop-color="#ab2c7a"/><stop offset="1" stop-color="#ff9f43"/></linearGradient>
     <radialGradient id="ball"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#c9c9d9"/><stop offset="1" stop-color="#7a7a99"/></radialGradient></defs>`;
   g += `<rect width="${W}" height="${H}" fill="url(#bg5)"/>`;
@@ -454,14 +457,17 @@ function scene5(t) {
   for (let i = 0; i < 6; i++) {
     const a = Math.sin(t * 2 + i) * 30 + (i - 2.5) * 22;
     const col = ['#ff5ad7', '#5ad7ff', '#ffe45a', '#7dff8a', '#ff8a5a', '#b05aff'][i];
-    g += `<path transform="translate(540,380) rotate(${a})" d="M0,0 L-70,1500 L70,1500Z" fill="${col}" opacity=".13"/>`;
+    g += `<path transform="translate(540,380) rotate(${a})" d="M0,0 L-70,1500 L70,1500Z" fill="${col}" opacity="${0.1 + 0.25 * kickEnv(t) * ((Math.floor((t - DROP) / BEAT) + i) % 2)}"/>`;
   }
   // palms
   const palm = (x, f) => `<g transform="translate(${x},1350) scale(${f},1)"><path d="M0,0 Q20,-260 60,-470" stroke="#1a0b2e" stroke-width="26" fill="none"/>${[-60, -20, 20, 60, 110].map(a => `<path transform="translate(60,-470) rotate(${a + Math.sin(t * 3) * 4})" d="M0,0 Q90,-40 180,30 Q90,-10 0,0Z" fill="#1a0b2e"/>`).join('')}</g>`;
   g += palm(-20, 1) + palm(1100, -1);
-  // disco ball
-  g += `<path d="M540,330 L540,380" stroke="#ddd" stroke-width="4"/><circle cx="540" cy="430" r="55" fill="url(#ball)"/>`;
-  for (let i = 0; i < 12; i++) g += `<rect x="${500 + (i % 4) * 20 + ((t * 40) % 20)}" y="${395 + Math.floor(i / 4) * 22}" width="12" height="12" fill="#fff" opacity="${0.3 + 0.6 * rnd(i + Math.floor(t * 8))}"/>`;
+  // neon sign: 아모르 파티
+  const nk = easeBack(prog(t, DROP, DROP + 0.3)), flick = finalOn ? 1 : 0.75 + 0.25 * kickEnv(t);
+  g += `<defs><filter id="neon" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  g += `<g transform="translate(540,440) scale(${nk})" opacity="${flick}"><rect x="-400" y="-85" width="800" height="170" rx="40" fill="rgba(20,0,40,.55)" stroke="#5ad7ff" stroke-width="7" filter="url(#neon)"/>
+    ${heart(-335, 8, '#ff5ad7')}${heart(335, 8, '#ff5ad7')}
+    <g filter="url(#neon)">${txt(0, -44, 'AMOR FATI', { size: 34, fill: '#bff4ff', font: 'bh', extra: 'letter-spacing="14"' })}${txt(0, 22, '아모르 파티!', { size: 104, fill: '#ffe1f6', font: 'bh', stroke: '#ff2ea6', sw: 8 })}</g></g>`;
   // background twinkles
   for (let i = 0; i < 26; i++) {
     const tw = 0.5 + 0.5 * Math.sin(t * 6 + i * 1.7);
@@ -470,14 +476,13 @@ function scene5(t) {
   // tagline
   const tk = easeBack(prog(t, 12.3, 12.65)), tk2 = easeBack(prog(t, 12.55, 12.9));
   const pulse = 1 + 0.04 * Math.sin(lt * Math.PI * 4);
-  g += `<g transform="translate(540,600) scale(${tk * pulse})">${txt(0, 0, '수익률은 출렁여도,', { size: 86, fill: '#fff', font: 'bh', stroke: '#2b0f54', sw: 16 })}</g>`;
+  g += `<g transform="translate(540,630) scale(${tk * pulse})">${txt(0, 0, '수익률은 출렁여도,', { size: 86, fill: '#fff', font: 'bh', stroke: '#2b0f54', sw: 16 })}</g>`;
   const wA = mw('우리 흥은 ', 96, 'Black Han Sans'), wB = mw('상한가!', 112, 'Black Han Sans'), xs = -(wA + wB) / 2;
-  g += `<g transform="translate(540,730) scale(${tk2 * pulse}) rotate(-2)"><text x="${xs}" y="0" dominant-baseline="middle" class="bh" stroke-linejoin="round" paint-order="stroke"><tspan font-size="96" fill="#fff" stroke="#2b0f54" stroke-width="16">우리 흥은 </tspan><tspan font-size="112" fill="#ff2e63" stroke="#fff" stroke-width="14">상한가!</tspan></text>
+  g += `<g transform="translate(540,755) scale(${tk2 * pulse}) rotate(-2)"><text x="${xs}" y="0" dominant-baseline="middle" class="bh" stroke-linejoin="round" paint-order="stroke"><tspan font-size="96" fill="#fff" stroke="#2b0f54" stroke-width="16">우리 흥은 </tspan><tspan font-size="112" fill="#ff2e63" stroke="#fff" stroke-width="14">상한가!</tspan></text>
      <path d="M${xs + wA + wB + 22},-10 L${xs + wA + wB + 22},-80 M${xs + wA + wB + 2},-58 L${xs + wA + wB + 22},-82 L${xs + wA + wB + 42},-58" stroke="#ff2e63" stroke-width="12" stroke-linecap="round" fill="none" opacity="${prog(t, 12.8, 13)}"/></g>`;
   // dancers
   const order = ['다솜', '지형', '현영', '미선', '미연', '민현', '정빈', '혜숙'];
-  const finalOn = t >= 14.25;
-  const fk = easeOut(prog(t, 14.1, 14.3));
+    const fk = easeOut(prog(t, FIN - 0.18, FIN));
   order.forEach((nm, i) => {
     const back = i < 4;
     const x = back ? 195 + i * 230 : 110 + (i - 4) * 287, y = back ? 1420 : 1720, s = back ? 0.52 : 0.58;
@@ -490,7 +495,7 @@ function scene5(t) {
     let aL = [lerp(p0[0][0], p1[0][0], m), lerp(p0[0][1], p1[0][1], m)];
     let aR = [lerp(p0[1][0], p1[1][0], m), lerp(p0[1][1], p1[1][1], m)];
     let hip = lerp(p0[2], p1[2], m), tilt = lerp(p0[3], p1[3], m);
-    if (t > 14.0) { // converge to the shared final move
+    if (t > FIN - 0.25) { // converge to the shared final move
       aL = [lerp(aL[0], FINAL[0][0], fk), lerp(aL[1], FINAL[0][1], fk)];
       aR = [lerp(aR[0], FINAL[1][0], fk), lerp(aR[1], FINAL[1][1], fk)];
       hip = lerp(hip, FINAL[2], fk); tilt = lerp(tilt, FINAL[3], fk);
@@ -512,17 +517,34 @@ function scene5(t) {
     if (nm === '지형' && !finalOn && t > 12.6 && bi % 2) g += txt(x - 70, y - 340, '어?', { size: 40, fill: '#fff', stroke: '#2b0f54', sw: 8 });
   });
   // final unison flash + badge
-  if (t >= 14.25) {
-    const ff = 1 - prog(t, 14.25, 14.55);
+  if (t >= FIN) {
+    const ff = 1 - prog(t, FIN, FIN + 0.3);
     g += `<rect width="${W}" height="${H}" fill="#fff" opacity="${ff * 0.7}"/>`;
-    const bk = easeBack(prog(t, 14.3, 14.6));
-    g += `<g transform="translate(540,870) scale(${bk}) rotate(-4)"><rect x="-290" y="-70" width="580" height="140" rx="70" fill="#ffcc33" stroke="#2b0f54" stroke-width="8"/>${keyIcon(-200, 0, 1.3)}${txt(40, 6, '59팀 골든키', { size: 78, fill: '#2b0f54', font: 'bh' })}</g>`;
-    g += txt(540, 985, '전원 일치!', { size: 52, fill: '#fff', font: 'bh', stroke: '#ff2e63', sw: 10, extra: `opacity="${prog(t, 14.4, 14.6)}"` });
+    const bk = easeBack(prog(t, FIN + 0.05, FIN + 0.35));
+    g += `<g transform="translate(540,885) scale(${bk}) rotate(-4)"><rect x="-290" y="-70" width="580" height="140" rx="70" fill="#ffcc33" stroke="#2b0f54" stroke-width="8"/>${keyIcon(-200, 0, 1.3)}${txt(40, 6, '59팀 골든키', { size: 78, fill: '#2b0f54', font: 'bh' })}</g>`;
+    g += txt(540, 1000, '전원 일치!', { size: 52, fill: '#fff', font: 'bh', stroke: '#ff2e63', sw: 10, extra: `opacity="${prog(t, FIN + 0.15, FIN + 0.35)}"` });
     for (let i = 0; i < 16; i++) {
-      const a = i / 16 * Math.PI * 2, r = 200 + prog(t, 14.25, 15) * 380;
-      g += star(540 + Math.cos(a) * r, 870 + Math.sin(a) * r * 0.8, 22, i % 2 ? '#ffd76a' : '#fff', 1 - prog(t, 14.6, 15));
+      const a = i / 16 * Math.PI * 2, r = 200 + prog(t, FIN, 15) * 380;
+      g += star(540 + Math.cos(a) * r, 885 + Math.sin(a) * r * 0.8, 22, i % 2 ? '#ffd76a' : '#fff', 1 - prog(t, FIN + 0.3, 15));
     }
   }
+  return g;
+}
+
+function heart(x, y, c) {
+  return `<path transform="translate(${x},${y}) scale(1.6)" d="M0,12 C-22,-4 -16,-22 -4,-18 Q0,-16 0,-11 Q0,-16 4,-18 C16,-22 22,-4 0,12Z" fill="${c}" filter="url(#neon)"/>`;
+}
+
+// 11.5s → 12s: the Bali win zooms through into "아모르 파티!"
+function bridge(t) {
+  if (t < 11.5 || t >= 12.05) return '';
+  const k = prog(t, 11.5, 12.0), sc = lerp(0.4, 4.5, Math.pow(k, 2.2));
+  let g = `<rect width="${W}" height="${H}" fill="#14002a" opacity="${0.75 * easeOut(prog(t, 11.5, 11.65))}"/>`;
+  for (let i = 0; i < 18; i++) { // speed lines
+    const a = i / 18 * Math.PI * 2 + 0.2, r0 = 260 + ((t * 2400 + i * 137) % 900);
+    g += `<path d="M${540 + Math.cos(a) * r0},${960 + Math.sin(a) * r0} L${540 + Math.cos(a) * (r0 + 180)},${960 + Math.sin(a) * (r0 + 180)}" stroke="${i % 2 ? '#ff5ad7' : '#5ad7ff'}" stroke-width="10" stroke-linecap="round" opacity=".8"/>`;
+  }
+  g += `<g transform="translate(540,960) scale(${sc}) rotate(${(1 - k) * -8})" opacity="${1 - prog(t, 11.93, 12.05)}">${txt(0, -70, '발리 당첨 =', { size: 64, fill: '#fff', font: 'bh' })}${txt(0, 30, '아모르 파티!', { size: 110, fill: '#ff5ad7', font: 'bh', stroke: '#fff', sw: 10 })}</g>`;
   return g;
 }
 
@@ -548,6 +570,11 @@ function render(t) {
   else if (t < 12) g = scene4(t);
   else g = scene5(t);
   // global zoom pulse
+  if (t >= DROP) { // camera punch on every kick of the drop
+    const z = 1 + 0.025 * kickEnv(t);
+    g = `<g transform="translate(540,960) scale(${z}) translate(-540,-960)">${g}</g>`;
+  }
+  g += bridge(t);
   g += titleBar(t, t >= 12);
   g += transition(t);
   document.getElementById('stage').innerHTML = g;
