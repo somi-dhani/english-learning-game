@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>부산갈 줄 알았던 우리, 발리 갑니다</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #000; }
+  #stage { width: 1080px; height: 1920px; display: block; }
+  text { font-family: 'Jua', sans-serif; }
+  .bh { font-family: 'Black Han Sans', sans-serif; }
+</style>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"></svg>
+<script>
+// ---------- helpers ----------
+const W = 1080, H = 1920, BEAT = 0.5;
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = k => 1 - Math.pow(1 - k, 3);
+const easeInOut = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const easeBack = k => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
+const rad = d => d * Math.PI / 180;
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+// deterministic pseudo random
+const _cv = document.createElement('canvas').getContext('2d');
+const mw = (str, size, font = 'Jua') => { _cv.font = `${size}px "${font}"`; return _cv.measureText(String(str)).width; };
+const rnd = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+function txt(x, y, s, { size = 40, fill = '#222', anchor = 'middle', font = '', stroke = '', sw = 0, weight = '', extra = '' } = {}) {
+  const st = stroke ? `stroke="${stroke}" stroke-width="${sw}" paint-order="stroke" stroke-linejoin="round"` : '';
+  return `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" text-anchor="${anchor}" dominant-baseline="middle" class="${font}" ${st} ${extra}>${esc(s)}</text>`;
+}
+
+// ---------- characters ----------
+const CAST = {
+  미연: { hair: 'pony', hairC: '#4a2c1d', top: '#ff7b6b', skirt: '#ffb3a7', skin: '#ffe0c7' },
+  다솜: { hair: 'bob', hairC: '#1d1a24', top: '#5ccfb0', skirt: '#2f8f7a', skin: '#ffe3cf', glasses: true },
+  지형: { hair: 'short', hairC: '#6b4128', top: '#3b4f8f', skirt: '#28355f', skin: '#fddcc0' },
+  민현: { hair: 'wave', hairC: '#22181c', top: '#9b5de5', skirt: '#6a35b0', skin: '#ffe4d2', redLip: true },
+  정빈: { hair: 'bun', hairC: '#7a4a2a', top: '#ffc93c', skirt: '#e29a00', skin: '#ffe0c4' },
+  현영: { hair: 'long', hairC: '#2b1e18', top: '#5bb8ff', skirt: '#2d7fd0', skin: '#ffe6d6' },
+  혜숙: { hair: 'perm', hairC: '#5a4636', top: '#4caf6e', skirt: '#2f7d4a', skin: '#fbd9bd' },
+  미선: { hair: 'side', hairC: '#8a3b22', top: '#ff7fb6', skirt: '#d94c8c', skin: '#ffe2cc' },
+};
+const SPARKLE = {
+  미연: ['#ffd76a', '#ff9f43'], 다솜: ['#c7f9ff', '#3dd6d0'], 지형: ['#d7dcff', '#7d8cff'], 민현: ['#ffb3c7', '#ff2e63'],
+  정빈: ['#fff3a0', '#ffcc00'], 현영: ['#c4e8ff', '#4aa3ff'], 혜숙: ['#d8ffc4', '#2ecc71'], 미선: ['#ffd1ec', '#ff4fa3'],
+};
+
+// arm geometry: angle 0 = straight down, 180 = straight up (measured outward)
+function armPts(side, a, b) {
+  const sx = side * 58, sy = -385, L1 = 88, L2 = 82;
+  const ex = sx + side * Math.sin(rad(a)) * L1, ey = sy + Math.cos(rad(a)) * L1;
+  const hx = ex + side * Math.sin(rad(a + b)) * L2, hy = ey + Math.cos(rad(a + b)) * L2;
+  return { sx, sy, ex, ey, hx, hy };
+}
+
+function eyesSvg(kind, t, look = 0) {
+  const ex = 30, ey = -478, lx = look * 6;
+  const two = f => f(-ex) + f(ex);
+  switch (kind) {
+    case 'happy': return two(x => `<path d="M${x - 13},${ey + 4} Q${x},${ey - 12} ${x + 13},${ey + 4}" fill="none" stroke="#2a1a14" stroke-width="7" stroke-linecap="round"/>`);
+    case 'sad': return two(x => `<path d="M${x - 13},${ey - 2} Q${x},${ey + 10} ${x + 13},${ey - 2}" fill="none" stroke="#2a1a14" stroke-width="6" stroke-linecap="round"/><path d="M${x - 16},${ey - 22} L${x + 12},${ey - 14 * Math.sign(-x)}" stroke="#2a1a14" stroke-width="5" stroke-linecap="round"/>`)
+      + `<path d="M${ex + 4},${ey + 12} q-7,16 0,22 q7,-6 0,-22z" fill="#6ec6ff"/>`;
+    case 'wow': return two(x => `<circle cx="${x}" cy="${ey}" r="15" fill="#fff" stroke="#2a1a14" stroke-width="5"/><circle cx="${x + lx}" cy="${ey}" r="7" fill="#2a1a14"/>`);
+    case 'closed': return two(x => `<path d="M${x - 13},${ey} L${x + 13},${ey}" stroke="#2a1a14" stroke-width="6" stroke-linecap="round"/>`);
+    default: {
+      const blink = (Math.floor(t * 10) % 37 === 0);
+      if (blink) return eyesSvg('closed', t);
+      return two(x => `<ellipse cx="${x + lx}" cy="${ey}" rx="10" ry="13" fill="#2a1a14"/><circle cx="${x + lx + 3}" cy="${ey - 5}" r="4" fill="#fff"/>`);
+    }
+  }
+}
+
+function mouthSvg(kind, talking, t, redLip) {
+  const my = -440, lip = redLip ? '#e0112b' : '#c2484f';
+  if (talking) kind = (Math.floor(t * 9) % 2) ? 'open' : 'smile';
+  switch (kind) {
+    case 'open': return `<path d="M-16,${my - 4} Q0,${my + 26} 16,${my - 4} Z" fill="${redLip ? '#e0112b' : '#9b2a33'}"/><path d="M-9,${my + 8} Q0,${my + 15} 9,${my + 8}" fill="#ff8a8a"/>`;
+    case 'grin': return `<path d="M-22,${my - 6} Q0,${my + 26} 22,${my - 6} Z" fill="#fff" stroke="${lip}" stroke-width="5" stroke-linejoin="round"/>`;
+    case 'frown': return `<path d="M-14,${my + 8} Q0,${my - 6} 14,${my + 8}" fill="none" stroke="${lip}" stroke-width="6" stroke-linecap="round"/>`;
+    case 'o': return `<ellipse cx="0" cy="${my + 2}" rx="10" ry="13" fill="${redLip ? '#e0112b' : '#9b2a33'}"/>`;
+    default: return redLip
+      ? `<path d="M-17,${my - 2} Q0,${my + 16} 17,${my - 2} Q0,${my + 4} -17,${my - 2}Z" fill="${lip}"/>`
+      : `<path d="M-15,${my - 2} Q0,${my + 14} 15,${my - 2}" fill="none" stroke="${lip}" stroke-width="6" stroke-linecap="round"/>`;
+  }
+}
+
+function hairBack(style, c) {
+  switch (style) {
+    case 'long': return `<path d="M-92,-500 Q-100,-330 -80,-320 L80,-320 Q100,-330 92,-500 Z" fill="${c}"/>`;
+    case 'wave': return `<path d="M-94,-500 Q-112,-420 -92,-380 Q-112,-350 -86,-310 L86,-310 Q112,-350 92,-380 Q112,-420 94,-500 Z" fill="${c}"/>`;
+    case 'bob': return `<path d="M-96,-500 Q-104,-420 -90,-405 L90,-405 Q104,-420 96,-500 Z" fill="${c}"/>`;
+    case 'side': return `<path d="M-94,-500 Q-104,-410 -84,-392 L84,-392 Q104,-410 94,-500 Z" fill="${c}"/>`;
+    case 'pony': return `<path d="M70,-540 Q150,-520 130,-420 Q120,-370 140,-340 Q90,-360 92,-430 Q96,-480 70,-500Z" fill="${c}"/>`;
+    case 'perm': return [[-80, -540], [-95, -480], [-88, -420], [80, -540], [95, -480], [88, -420], [-40, -575], [40, -575], [0, -585]]
+      .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="42" fill="${c}"/>`).join('');
+    default: return '';
+  }
+}
+function hairFront(style, c) {
+  switch (style) {
+    case 'bun': return `<circle cx="0" cy="-578" r="40" fill="${c}"/><path d="M-84,-470 Q-90,-570 0,-566 Q90,-570 84,-470 Q60,-520 0,-520 Q-50,-525 -84,-470Z" fill="${c}"/>`;
+    case 'short': return `<path d="M-88,-450 Q-100,-575 0,-572 Q100,-575 88,-450 Q80,-500 40,-515 Q-10,-490 -70,-505 Q-84,-480 -88,-450Z" fill="${c}"/>`;
+    case 'side': return `<path d="M-88,-460 Q-96,-572 0,-570 Q96,-572 88,-460 Q70,-530 -30,-512 Q-60,-500 -88,-460Z" fill="${c}"/>`;
+    case 'perm': return `<path d="M-84,-470 Q-90,-570 0,-566 Q90,-570 84,-470 Q50,-525 0,-512 Q-50,-525 -84,-470Z" fill="${c}"/>`;
+    default: return `<path d="M-88,-470 Q-96,-572 0,-570 Q96,-572 88,-470 Q76,-512 40,-520 Q0,-500 -40,-520 Q-76,-512 -88,-470Z" fill="${c}"/>`;
+  }
+}
+
+// opts: x,y,s, armL:[a,b], armR:[a,b], eyes, mouth, talk, bob, tilt, stomp, sparkle, sunglasses, look, props(fn(hands)->svg in local coords), name
+function person(name, t, o = {}) {
+  const c = CAST[name];
+  const s = o.s ?? 1, x = o.x ?? 540, y = o.y ?? 1500;
+  const [aL, bL] = o.armL ?? [12, 0], [aR, bR] = o.armR ?? [12, 0];
+  const L = armPts(-1, aL, bL), R = armPts(1, aR, bR);
+  const bob = o.bob ?? 0, tilt = o.tilt ?? 0, hip = o.hip ?? 0;
+  const stomp = o.stomp ?? 0; // lift alternating legs
+  const legL = Math.max(0, Math.sin(stomp)) * 30, legR = Math.max(0, -Math.sin(stomp)) * 30;
+  const sp = o.sparkle;
+  let topFill = c.top, skirtFill = c.skirt, defs = '';
+  if (sp) {
+    const id = 'g' + name.charCodeAt(0);
+    defs = `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${SPARKLE[name][0]}"/><stop offset="${0.5 + 0.3 * Math.sin(t * 6)}" stop-color="#ffffff"/><stop offset="1" stop-color="${SPARKLE[name][1]}"/></linearGradient></defs>`;
+    topFill = skirtFill = `url(#${id})`;
+  }
+  const limb = (p, col) => `<path d="M${p.sx},${p.sy} L${p.ex},${p.ey} L${p.hx},${p.hy}" fill="none" stroke="${col}" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${p.hx}" cy="${p.hy}" r="19" fill="${c.skin}"/>`;
+  let g = defs;
+  // shadow
+  g += `<ellipse cx="0" cy="8" rx="110" ry="20" fill="rgba(0,0,0,.18)"/>`;
+  // legs
+  g += `<rect x="-42" y="${-215 - legL}" width="30" height="${205}" rx="14" fill="${c.skin}"/><rect x="12" y="${-215 - legR}" width="30" height="205" rx="14" fill="${c.skin}"/>`;
+  g += `<ellipse cx="-30" cy="${-6 - legL}" rx="30" ry="15" fill="#3a2a2a"/><ellipse cx="30" cy="${-6 - legR}" rx="30" ry="15" fill="#3a2a2a"/>`;
+  // upper body group bobbing
+  let u = '';
+  u += hairBack(c.hair, c.hairC);
+  // skirt
+  u += `<path d="M-62,-290 L62,-290 L${100 + hip},-190 Q0,-170 ${-100 + hip},-190 Z" fill="${skirtFill}"/>`;
+  // torso
+  u += `<path d="M-64,-400 Q0,-415 64,-400 L62,-285 L-62,-285 Z" fill="${topFill}"/>`;
+  if (sp) for (let i = 0; i < 9; i++) {
+    const px = -70 + rnd(i + name.length * 9) * 140, py = -395 + rnd(i * 3 + 1) * 200, tw = 0.5 + 0.5 * Math.sin(t * 9 + i * 2);
+    u += `<path transform="translate(${px},${py}) scale(${0.4 + tw * 0.8})" d="M0,-14 L4,-4 L14,0 L4,4 L0,14 L-4,4 L-14,0 L-4,-4Z" fill="#fff" opacity="${0.4 + tw * 0.6}"/>`;
+  }
+  // arms
+  u += limb(L, c.skin) + limb(R, c.skin);
+  // sleeves
+  u += `<circle cx="-58" cy="-385" r="24" fill="${topFill}"/><circle cx="58" cy="-385" r="24" fill="${topFill}"/>`;
+  // head
+  let hd = `<rect x="-14" y="-420" width="28" height="30" fill="${c.skin}"/>`;
+  hd += `<circle cx="0" cy="-480" r="84" fill="${c.skin}"/>`;
+  hd += `<ellipse cx="-50" cy="-450" rx="15" ry="9" fill="#ff9aa2" opacity=".55"/><ellipse cx="50" cy="-450" rx="15" ry="9" fill="#ff9aa2" opacity=".55"/>`;
+  hd += eyesSvg(o.eyes || 'open', t, o.look || 0);
+  hd += mouthSvg(o.mouth || 'smile', o.talk, t, c.redLip || o.redLip);
+  hd += hairFront(c.hair, c.hairC);
+  if (c.glasses) hd += `<g fill="none" stroke="#333" stroke-width="5"><circle cx="-30" cy="-478" r="22"/><circle cx="30" cy="-478" r="22"/><path d="M-8,-480 L8,-480"/></g>`;
+  if (o.sunglasses != null) {
+    const dy = (1 - o.sunglasses) * -120;
+    hd += `<g transform="translate(0,${dy})" opacity="${clamp(o.sunglasses * 3)}"><path d="M-62,-492 L-4,-492 Q-6,-455 -34,-455 Q-60,-455 -62,-492Z M4,-492 L62,-492 Q60,-455 34,-455 Q6,-455 4,-492Z" fill="#111"/><path d="M-66,-492 L66,-492" stroke="#111" stroke-width="7"/><path d="M-50,-485 L-30,-470" stroke="#fff" stroke-width="4" opacity=".6"/><path d="M16,-485 L36,-470" stroke="#fff" stroke-width="4" opacity=".6"/></g>`;
+  }
+  if (o.sweat) hd += `<path d="M78,-540 q-12,24 0,32 q12,-8 0,-32z" fill="#7fd3ff"/>`;
+  u += `<g transform="rotate(${tilt} 0 -420)">${hd}</g>`;
+  if (o.props) u += o.props({ L, R });
+  g += `<g transform="translate(0,${bob})">${u}</g>`;
+  // name tag
+  if (o.tag !== false) g += `<g transform="translate(0,${o.tagY ?? 52})"><rect x="-70" y="-26" width="140" height="52" rx="26" fill="#fff" stroke="${c.top}" stroke-width="6"/>${txt(0, 2, name, { size: 34, fill: '#333' })}</g>`;
+  const flip = o.flip ? -1 : 1;
+  return `<g transform="translate(${x},${y}) scale(${s * flip},${s})">${g}</g>`;
+}
+
+// ---------- UI pieces ----------
+function bubble(x, y, str, t0, t1, t, { color = '#fff', textC = '#222', tail = 'down', size = 52, border = '#222', tailX = 0 } = {}) {
+  if (t < t0 || t > t1) return '';
+  const k = easeBack(prog(t, t0, t0 + 0.25)), out = prog(t, t1 - 0.15, t1);
+  const sc = k * (1 - out);
+  const w = Math.max(220, mw(str, size) + 84), h = size + 56;
+  let tl = '';
+  if (tail === 'down') tl = `<path d="M${tailX - 22},${h / 2 - 4} L${tailX + 4},${h / 2 + 44} L${tailX + 30},${h / 2 - 4}Z" fill="${color}" stroke="${border}" stroke-width="6" stroke-linejoin="round"/><rect x="${tailX - 24}" y="${h / 2 - 12}" width="58" height="12" fill="${color}"/>`;
+  return `<g transform="translate(${x},${y}) scale(${sc})"><rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${color}" stroke="${border}" stroke-width="6"/>${tl}${txt(0, 4, str, { size, fill: textC })}</g>`;
+}
+
+function caption(str, t0, t, y = 1790, opts = {}) {
+  if (t < t0) return '';
+  const k = easeOut(prog(t, t0, t0 + 0.3));
+  return `<g opacity="${k}" transform="translate(0,${(1 - k) * 30})"><rect x="90" y="${y - 58}" width="900" height="116" rx="58" fill="rgba(20,16,40,.82)"/>${keyIcon(160, y, 0.9)}${txt(560, y + 4, str, { size: opts.size || 50, fill: '#ffd76a', font: 'bh' })}</g>`;
+}
+
+function keyIcon(x, y, s = 1) {
+  return `<g transform="translate(${x},${y}) scale(${s})"><circle cx="-14" cy="0" r="20" fill="none" stroke="#ffcc33" stroke-width="10"/><path d="M6,0 L48,0 M36,0 L36,16 M46,0 L46,12" stroke="#ffcc33" stroke-width="10" stroke-linecap="round"/></g>`;
+}
+
+function titleBar(t, dark = false) {
+  const fg = dark ? '#fff' : '#1f1a3a';
+  let g = `<rect x="0" y="0" width="${W}" height="330" fill="${dark ? 'rgba(10,5,30,.35)' : 'rgba(255,255,255,.55)'}"/>`;
+  g += txt(540, 120, '부산갈 줄 알았던 우리,', { size: 82, fill: fg, font: 'bh' });
+  // strike-through on 부산 (first two glyphs approx)
+  const sk = easeOut(prog(t, 0.4, 0.9));
+  const x0 = 540 - mw('부산갈 줄 알았던 우리,', 82, 'Black Han Sans') / 2 - 10, sw = mw('부산', 82, 'Black Han Sans') + 20;
+  g += `<path d="M${x0},132 L${x0 + sw * sk},108" stroke="#ff3b5c" stroke-width="12" stroke-linecap="round"/>`;
+  g += `<g transform="translate(540,240)"><rect x="-260" y="-58" width="520" height="116" rx="24" fill="#ff5a5f" transform="rotate(-2)"/>${txt(0, 4, '발리 갑니다.', { size: 92, fill: '#fff', font: 'bh' })}</g>`;
+  return g;
+}
+
+function chart(x, y, w, h, pts, k, color, { bg = 'rgba(255,255,255,.95)', area = true } = {}) {
+  // pts in [0..1] normalized values; draw first k fraction of the path
+  let g = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="26" fill="${bg}" stroke="#2a2340" stroke-width="6"/>`;
+  for (let i = 1; i < 4; i++) g += `<path d="M${x + 24},${y + h * i / 4} L${x + w - 24},${y + h * i / 4}" stroke="#ddd" stroke-width="3" stroke-dasharray="10 10"/>`;
+  const n = pts.length - 1, upto = k * n;
+  const P = [];
+  for (let i = 0; i <= Math.floor(upto); i++) P.push([i, pts[i]]);
+  if (upto % 1 > 0 && Math.floor(upto) < n) { const i = Math.floor(upto), f = upto - i; P.push([upto, lerp(pts[i], pts[i + 1], f)]); }
+  const px = i => x + 40 + (w - 80) * i / n, py = v => y + h - 30 - (h - 60) * v;
+  if (P.length > 1) {
+    const d = P.map(([i, v], j) => `${j ? 'L' : 'M'}${px(i)},${py(v)}`).join(' ');
+    if (area) g += `<path d="${d} L${px(P[P.length - 1][0])},${y + h - 20} L${px(0)},${y + h - 20}Z" fill="${color}" opacity=".15"/>`;
+    g += `<path d="${d}" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const [li, lv] = P[P.length - 1];
+    g += `<circle cx="${px(li)}" cy="${py(lv)}" r="14" fill="${color}" stroke="#fff" stroke-width="5"/>`;
+  }
+  return g;
+}
+
+function confetti(t, t0, n = 40, seed = 0) {
+  if (t < t0) return '';
+  const cols = ['#ff5a5f', '#ffd76a', '#5ccfb0', '#5bb8ff', '#9b5de5', '#ff7fb6'];
+  let g = '';
+  for (let i = 0; i < n; i++) {
+    const dt = t - t0, x = 80 + rnd(i + seed) * 920, vy = 380 + rnd(i * 7 + seed) * 500;
+    const y = 360 + vy * dt - 260 * Math.max(0, 0.6 - dt) + 0;
+    const rot = dt * 400 * (rnd(i * 3) - .5) + i * 30;
+    g += `<rect x="-9" y="-5" width="18" height="10" fill="${cols[i % 6]}" transform="translate(${x + Math.sin(dt * 5 + i) * 30},${y}) rotate(${rot})"/>`;
+  }
+  return g;
+}
+
+function star(x, y, r, fill, op = 1) {
+  return `<path transform="translate(${x},${y}) scale(${r / 14})" d="M0,-14 L4,-4 L14,0 L4,4 L0,14 L-4,4 L-14,0 L-4,-4Z" fill="${fill}" opacity="${op}"/>`;
+}
+
+// ---------- scenes ----------
+function scene1(t) {
+  let g = `<rect width="${W}" height="${H}" fill="url(#bg1)"/>`;
+  g += `<defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1e0"/><stop offset="1" stop-color="#ffd2c2"/></linearGradient></defs>`;
+  // floor
+  g += `<rect x="0" y="1480" width="${W}" height="440" fill="#ffc2ad"/>`;
+  // chat panel (fades/shrinks into study board at ~2.2s)
+  const morph = easeInOut(prog(t, 2.05, 2.5));
+  if (morph < 1) {
+    const unread = t < 0.7 ? 7 : t < 1.1 ? 6 : 5;
+    const sc = 1 - morph;
+    g += `<g transform="translate(540,620) scale(${sc})"><rect x="-330" y="-190" width="660" height="380" rx="36" fill="#b7cde3" stroke="#2a2340" stroke-width="6"/>
+      <rect x="-330" y="-190" width="660" height="70" rx="36" fill="#9ab4cf"/><rect x="-330" y="-150" width="660" height="30" fill="#9ab4cf"/>
+      ${txt(0, -155, '59팀 골든키 단톡방 (8)', { size: 34, fill: '#223' })}
+      <rect x="-60" y="-80" width="360" height="90" rx="22" fill="#ffe14d"/>${txt(120, -34, '체크리스트 확인!', { size: 38, fill: '#222' })}
+      <g transform="translate(-95,-10) scale(${unread === 5 && t > 1.1 ? 1 + 0.15 * Math.abs(Math.sin(t * 10)) : 1})">${txt(0, 0, unread, { size: 48, fill: '#e8a400', font: 'bh' })}</g>
+      <rect x="-60" y="30" width="300" height="90" rx="22" fill="#ffe14d"/>${txt(90, 76, '대답해 주세요~', { size: 38, fill: '#222' })}
+      ${txt(-95, 90, unread, { size: 48, fill: '#e8a400', font: 'bh' })}</g>`;
+  }
+  // question mark -> study board
+  const qIn = prog(t, 1.45, 1.75);
+  if (t > 1.45 && morph < 1) {
+    const qs = easeBack(qIn) * (1 + 0.6 * morph);
+    const qx = lerp(780, 540, morph), qy = lerp(880, 620, morph);
+    g += `<g transform="translate(${qx},${qy}) scale(${qs}) rotate(${Math.sin(t * 8) * 8 + morph * 360})">${txt(0, 0, '?', { size: 220, fill: '#7c4dff', font: 'bh', stroke: '#fff', sw: 14 })}</g>`;
+  }
+  if (morph > 0) {
+    const bs = easeBack(morph);
+    g += `<g transform="translate(540,620) scale(${bs})"><rect x="-340" y="-200" width="680" height="400" rx="26" fill="#23493d" stroke="#8b5a2b" stroke-width="18"/>
+      ${txt(0, -125, '투자 스터디 OPEN!', { size: 62, fill: '#fff', font: 'bh' })}
+      ${txt(-280, -30, 'Q. ETF는 뭐예요?', { size: 42, fill: '#ffe680', anchor: 'start' })}
+      ${txt(-280, 35, 'Q. 배당주는 언제 사요?', { size: 42, fill: '#bff7d8', anchor: 'start' })}
+      ${txt(-280, 100, 'Q. 연금은 어떻게?', { size: 42, fill: '#ffc0d9', anchor: 'start' })}
+      <path d="M130,150 L190,110 L230,130 L300,60" fill="none" stroke="#ffe680" stroke-width="8" stroke-linecap="round"/></g>`;
+  }
+  // 미연: stomping with checklist
+  const stompOn = t < 1.8;
+  g += person('미연', t, {
+    x: 300, y: 1560, s: 0.9,
+    stomp: stompOn ? t * 18 : 0, bob: stompOn ? -Math.abs(Math.sin(t * 9)) * 14 : 0,
+    armL: [35, 70], armR: t < 1.5 ? [150 + Math.sin(t * 14) * 15, 10] : [30, 60],
+    eyes: t < 1.6 ? 'open' : 'wow', mouth: 'open', talk: t > 0.2 && t < 1.5, tilt: Math.sin(t * 7) * 4,
+    props: ({ L }) => `<g transform="translate(${L.hx + 30},${L.hy - 60}) rotate(-8)"><rect x="-55" y="-75" width="110" height="150" rx="10" fill="#c58b4f"/><rect x="-45" y="-58" width="90" height="125" fill="#fff"/><rect x="-20" y="-82" width="40" height="18" rx="5" fill="#888"/>
+      ${[0, 1, 2].map(i => `<rect x="-36" y="${-40 + i * 36}" width="18" height="18" fill="none" stroke="#333" stroke-width="3"/>${i < 1 ? `<path d="M-33,${-31 + i * 36} l5,6 l10,-12" stroke="#e33" stroke-width="4" fill="none"/>` : ''}<rect x="-10" y="${-34 + i * 36}" width="44" height="6" fill="#bbb"/>`).join('')}</g>`,
+  });
+  // 다솜 slides in
+  if (t > 1.2) {
+    const k = easeOut(prog(t, 1.2, 1.6));
+    g += person('다솜', t, {
+      x: lerp(1250, 790, k), y: 1560, s: 0.9, bob: -Math.abs(Math.sin(t * 6)) * 10,
+      armL: [20, 0], armR: [165, 0], eyes: 'open', mouth: 'smile', talk: t > 1.65 && t < 2.9, tilt: -6,
+    });
+  }
+  g += bubble(330, 925, '언니들! 대답 좀!', 0.15, 1.6, t, { color: '#fff', tailX: -40 });
+  g += bubble(750, 925, '근데 질문 있어요!', 1.65, 3.0, t, { color: '#efe7ff', tailX: 40 });
+  g += caption('59팀 골든키 · 8개월의 여정', 0.4, t);
+  return g;
+}
+
+function scene2(t) {
+  let g = `<defs><linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3f3ff"/><stop offset="1" stop-color="#b9dcff"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#bg2)"/>`;
+  g += `<rect x="0" y="1480" width="${W}" height="440" fill="#9cc8f0"/>`;
+  // sun / morning
+  g += `<circle cx="940" cy="420" r="60" fill="#ffd76a" opacity=".9"/>`;
+  // board with chart
+  const bIn = easeBack(prog(t, 4.3, 4.65));
+  g += `<g transform="translate(700,650) scale(${bIn})"><g transform="translate(-300,-220)">${chart(0, 0, 600, 360, [0.2, 0.3, 0.25, 0.45, 0.4, 0.62, 0.58, 0.85], prog(t, 4.6, 5.4), '#ff4d6d')}
+    <rect x="0" y="-74" width="600" height="70" rx="18" fill="#2a2340"/>${txt(300, -38, 'NEWS → INVEST 스터디', { size: 40, fill: '#fff', font: 'bh' })}</g></g>`;
+  // news cards fly & stack
+  const heads = ['[경제] 금리 동결', '[증시] 코스피 상승', '[해외] 美 배당 시즌'];
+  heads.forEach((hl, i) => {
+    const k = easeOut(prog(t, 3.1 + i * 0.25, 3.5 + i * 0.25));
+    const tx = lerp(-300, 205, k), ty = lerp(500 - i * 120, 740 - i * 26, k), rot = lerp(-40 + i * 25, -3 + i * 2, k);
+    g += `<g transform="translate(${tx},${ty}) rotate(${rot})"><rect x="-150" y="-55" width="300" height="110" rx="12" fill="#fff" stroke="#2a2340" stroke-width="5"/><rect x="-130" y="-38" width="90" height="70" fill="#cfd8e3"/>${txt(25, -12, hl.split(' ')[0], { size: 28, fill: '#e33', anchor: 'middle' })}${txt(45, 22, hl.split(' ').slice(1).join(' '), { size: 28, fill: '#222' })}</g>`;
+  });
+  // connecting dotted line
+  const lk = prog(t, 4.45, 4.9);
+  if (lk > 0) {
+    const x1 = 355, y1 = 690, x2 = lerp(355, 430, lk), y2 = lerp(690, 640, lk);
+    g += `<path d="M${x1},${y1} L${x2},${y2}" stroke="#ff4d6d" stroke-width="8" stroke-dasharray="16 12" stroke-dashoffset="${-t * 80}"/>`;
+  }
+  g += person('지형', t, {
+    x: 250, y: 1560, s: 0.9, armL: [40, 60], armR: t < 4 ? [130 + Math.sin(t * 10) * 10, 20] : [30, 50],
+    eyes: 'open', mouth: 'smile', talk: t > 3.15 && t < 4.4, bob: -Math.abs(Math.sin(t * 6)) * 8, tilt: 4,
+  });
+  g += person('민현', t, {
+    x: 820, y: 1560, s: 0.9, armL: t > 4.4 ? [150, -20] : [15, 0], armR: [20, 0],
+    eyes: 'open', mouth: 'smile', talk: t > 4.5 && t < 5.9, bob: -Math.abs(Math.sin(t * 5)) * 8, tilt: -4, look: -1,
+  });
+  g += bubble(290, 935, '오늘의 뉴스!', 3.15, 4.5, t, { tailX: -30 });
+  g += bubble(700, 935, '투자로 연결해볼까요?', 4.5, 6.0, t, { color: '#ffe8f0', tailX: 80, size: 48 });
+  g += caption('아침마다 뉴스 → 투자 스터디', 3.1, t, 1790, { size: 46 });
+  return g;
+}
+
+function scene3(t) {
+  let g = `<defs><linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1e8ff"/><stop offset="1" stop-color="#d9c6ff"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#bg3)"/>`;
+  g += `<rect x="0" y="1480" width="${W}" height="440" fill="#c7b0f3"/>`;
+  // chart: up a bit, crash at 6.5, rebound 8.0
+  const base = [0.55, 0.6, 0.62];
+  const crash = easeOut(prog(t, 6.45, 7.0)), reb = easeOut(prog(t, 8.0, 8.6));
+  const pts = [...base, lerp(0.62, 0.15, crash), lerp(0.62, 0.05, crash), lerp(0.05, 0.4, reb), lerp(0.05, 0.7, reb), lerp(0.05, 0.95, reb)];
+  const n = t < 8 ? (t < 6.45 ? 2 : 4) : 7;
+  const k = t < 6.45 ? 1 : t < 8 ? 1 : 1;
+  const col = t < 8 ? (t < 6.45 ? '#3a86ff' : '#ff3b30') : '#16c172';
+  const shake = t > 6.45 && t < 6.9 ? Math.sin(t * 90) * 10 : 0;
+  g += `<g transform="translate(${shake},0)">${chart(140, 400, 800, 420, pts.slice(0, n + 1), k, col)}`;
+  if (t > 6.5 && t < 8) g += txt(840, 470, '▼ -12%', { size: 50, fill: '#ff3b30', font: 'bh' });
+  if (t >= 8.1) g += `<g transform="scale(${1})">${txt(820, 470, '▲ +18%', { size: 54, fill: '#16c172', font: 'bh' })}</g>`;
+  g += `</g>`;
+  // buy button
+  const press = t > 6.2 && t < 6.45;
+  const bv = 1 - prog(t, 6.55, 6.75);
+  if (bv > 0) g += `<g transform="translate(540,920) scale(${bv})"><rect x="-120" y="${press ? -26 : -40}" width="240" height="${press ? 70 : 84}" rx="24" fill="${press ? '#c8102e' : '#ff3b5c'}" stroke="#2a2340" stroke-width="6"/>${txt(0, press ? 8 : 2, '매수', { size: 54, fill: '#fff', font: 'bh' })}</g>`;
+  const sad = t > 6.6 && t < 8.1, cheer = t > 8.45;
+  // 현영 moves closer
+  const hk = easeInOut(prog(t, 7.15, 7.5));
+  const hx = lerp(820, 600, hk);
+  // rain cloud over 정빈
+  if (sad) {
+    const ck = easeOut(prog(t, 6.6, 6.9)) * (1 - prog(t, 7.85, 8.1));
+    g += `<g transform="translate(270,965) scale(${ck * 0.7})" opacity="${ck}"><circle cx="-50" cy="0" r="45" fill="#8a8fa8"/><circle cx="10" cy="-20" r="55" fill="#8a8fa8"/><circle cx="65" cy="5" r="40" fill="#8a8fa8"/><rect x="-90" y="0" width="190" height="45" rx="22" fill="#8a8fa8"/>
+      ${[0, 1, 2, 3].map(i => `<path d="M${-60 + i * 40},${60 + ((t * 300 + i * 40) % 80)} l-6,22" stroke="#6ec6ff" stroke-width="6" stroke-linecap="round"/>`).join('')}</g>`;
+  }
+  g += person('정빈', t, {
+    x: 300, y: 1560, s: 0.9,
+    armL: cheer ? [160, 10] : sad ? [10, -5] : [20, 0],
+    armR: cheer ? [160, 10] : (t > 6.0 && t < 6.5) ? [100, 30] : sad ? [10, -5] : [20, 0],
+    eyes: cheer ? 'happy' : sad ? 'sad' : 'open', mouth: cheer ? 'grin' : sad ? 'frown' : 'smile',
+    talk: t > 6.6 && t < 7.5, bob: cheer ? -Math.abs(Math.sin(t * 12)) * 40 : sad ? 14 : 0, tilt: sad ? 10 : 0,
+  });
+  g += person('현영', t, {
+    x: hx, y: 1560, s: 0.9,
+    armL: cheer ? [160, 10] : hk > 0.5 ? [85, 10] : [20, 0], armR: cheer ? [160, 10] : [25, 0],
+    eyes: cheer ? 'happy' : 'open', mouth: cheer ? 'grin' : 'smile', talk: t > 7.6 && t < 8.5, look: -1,
+    bob: cheer ? -Math.abs(Math.sin(t * 12 + 1)) * 40 : 0, tilt: -6,
+  });
+  g += bubble(560, 900, '왜 내가 사면…!', 6.6, 7.6, t, { color: '#e8eefc', tailX: -120 });
+  g += bubble(560, 900, '같이 성장하면 되죠!', 7.6, 8.75, t, { color: '#e6fff1', tailX: 80, size: 48 });
+  g += confetti(t, 8.45, 50, 3);
+  g += caption('물려도 같이, 올라도 같이!', 6.1, t, 1790, { size: 48 });
+  return g;
+}
+
+function scene4(t) {
+  let g = `<defs><linearGradient id="bg4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbe6"/><stop offset="1" stop-color="#ffe9a8"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#bg4)"/>`;
+  g += `<rect x="0" y="1480" width="${W}" height="440" fill="#ffd67a"/>`;
+  // flipping card
+  const fk = prog(t, 9.15, 9.6), sx = Math.abs(Math.cos(fk * Math.PI)), back = fk > 0.5;
+  const ci = easeBack(prog(t, 9.0, 9.2));
+  g += `<g transform="translate(310,650) scale(${sx * ci * 0.8},${ci * 0.8}) rotate(-3)">`;
+  if (!back) g += `<rect x="-230" y="-260" width="460" height="520" rx="30" fill="#2a2340"/>${txt(0, -150, '“', { size: 160, fill: '#ffd76a', font: 'bh' })}${txt(0, -20, '천천히 가도', { size: 56, fill: '#fff' })}${txt(0, 60, '멈추지만 않으면', { size: 56, fill: '#fff' })}${txt(0, 140, '된다', { size: 56, fill: '#fff' })}`;
+  else g += `<rect x="-230" y="-260" width="460" height="520" rx="30" fill="#fff" stroke="#2a2340" stroke-width="8"/><rect x="-230" y="-260" width="460" height="100" rx="30" fill="#ff5a5f"/><rect x="-230" y="-190" width="460" height="30" fill="#ff5a5f"/>${txt(0, -208, '실행 계획', { size: 56, fill: '#fff', font: 'bh' })}
+    ${['매일 경제뉴스 1개', '주 1회 투자 스터디', '매달 적립식 투자'].map((s, i) => `<circle cx="-170" cy="${-80 + i * 110}" r="28" fill="#ffd76a"/>${txt(-170, -78 + i * 110, i + 1, { size: 36, fill: '#222', font: 'bh' })}${txt(-125, -78 + i * 110, s, { size: 40, fill: '#222', anchor: 'start' })}`).join('')}`;
+  g += `</g>`;
+  // cert card held by 미선
+  const mk = easeBack(prog(t, 10.2, 10.45));
+  g += `<g transform="translate(790,690) scale(${mk * 0.85}) rotate(4)"><rect x="-210" y="-170" width="420" height="340" rx="28" fill="#fff" stroke="#d94c8c" stroke-width="8"/>${txt(0, -110, '노후 준비 인증', { size: 48, fill: '#d94c8c', font: 'bh' })}
+    ${['연금저축', 'IRP'].map((s, i) => `<rect x="-160" y="${-55 + i * 95}" width="56" height="56" rx="10" fill="#16c172"/><path d="M-148,${-28 + i * 95} l12,14 l22,-28" stroke="#fff" stroke-width="9" fill="none" stroke-linecap="round"/>${txt(-80, -26 + i * 95, s, { size: 50, fill: '#222', anchor: 'start' })}`).join('')}
+    <circle cx="150" cy="120" r="44" fill="none" stroke="#ff3b5c" stroke-width="6" opacity="${prog(t, 10.6, 10.8)}"/>${t > 10.6 ? txt(150, 122, '인증', { size: 30, fill: '#ff3b5c', font: 'bh' }) : ''}</g>`;
+  const surprised = t > 11.25;
+  g += person('혜숙', t, {
+    x: 270, y: 1560, s: 0.9, armL: [130, 20], armR: surprised ? [150, 30] : [120, 30],
+    eyes: surprised ? 'wow' : 'happy', mouth: surprised ? 'o' : 'smile', talk: t > 9.4 && t < 10.3, tilt: 5, look: 1,
+    bob: surprised ? -Math.abs(Math.sin(t * 14)) * 30 : 0,
+  });
+  g += person('미선', t, {
+    x: 800, y: 1560, s: 0.9, armL: [125, 25], armR: surprised ? [160, 20] : [125, 25],
+    eyes: surprised ? 'wow' : 'happy', mouth: surprised ? 'o' : 'grin', talk: t > 10.4 && t < 11.2, tilt: -5, look: -1,
+    bob: surprised ? -Math.abs(Math.sin(t * 14 + 1)) * 30 : 0,
+  });
+  g += bubble(340, 935, '우리들의 리그로!', 9.4, 10.4, t, { tailX: -60, size: 48 });
+  g += bubble(720, 935, '발리는 배당금으로!', 10.4, 11.3, t, { color: '#ffe6f2', tailX: 70, size: 48 });
+  // push notification
+  if (t > 11.15) {
+    const nk = easeBack(prog(t, 11.15, 11.45));
+    const wig = Math.sin(t * 40) * 3 * (1 - prog(t, 11.4, 11.8));
+    g += `<g transform="translate(540,${lerp(140, 470, nk)}) rotate(${wig})"><rect x="-470" y="-95" width="940" height="190" rx="40" fill="#fff" stroke="#2a2340" stroke-width="6"/>
+      <rect x="-440" y="-60" width="120" height="120" rx="30" fill="#ff5a5f"/>${bell(-380, 0)}
+      ${txt(-295, -40, '알림 · 지금', { size: 32, fill: '#888', anchor: 'start' })}
+      ${txt(-295, 18, '축하합니다! 59팀 골든키', { size: 44, fill: '#222', anchor: 'start' })}
+      ${txt(-295, 64, '발리 여행 당첨!', { size: 50, fill: '#ff3b5c', anchor: 'start', font: 'bh' })}</g>`;
+    g += confetti(t, 11.3, 40, 11);
+  }
+  g += caption('우리만의 실행 계획, 우리만의 리그', 9.05, t, 1790, { size: 44 });
+  return g;
+}
+
+function bell(x, y) {
+  return `<g transform="translate(${x},${y})"><path d="M-32,22 Q-30,-38 0,-40 Q30,-38 32,22 L40,30 L-40,30Z" fill="#fff"/><circle cx="0" cy="40" r="9" fill="#fff"/><circle cx="0" cy="-44" r="7" fill="#fff"/></g>`;
+}
+
+// dance poses: [armL, armR, hip, tilt]
+const POSES = [
+  [[160, 10], [160, 10], 0, 0],       // V up
+  [[95, 0], [30, 80], 20, 8],         // point left
+  [[30, 80], [95, 0], -20, -8],       // point right
+  [[60, 100], [60, 100], 0, 0],       // clap
+  [[170, -20], [40, 70], 15, 6],      // one up, hand on hip
+  [[40, 70], [170, -20], -15, -6],
+];
+const FINAL = [[40, 75], [175, -5], 18, -6]; // hand on hip + point to sky
+
+function scene5(t) {
+  const lt = t - 12;
+  let g = `<defs><linearGradient id="bg5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b0f54"/><stop offset=".55" stop-color="#ab2c7a"/><stop offset="1" stop-color="#ff9f43"/></linearGradient>
+    <radialGradient id="ball"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#c9c9d9"/><stop offset="1" stop-color="#7a7a99"/></radialGradient></defs>`;
+  g += `<rect width="${W}" height="${H}" fill="url(#bg5)"/>`;
+  // sun & sea
+  g += `<circle cx="540" cy="1230" r="230" fill="#ffd76a" opacity=".55"/><rect x="0" y="1260" width="${W}" height="80" fill="#ff7b6b" opacity=".35"/>`;
+  // light beams
+  for (let i = 0; i < 6; i++) {
+    const a = Math.sin(t * 2 + i) * 30 + (i - 2.5) * 22;
+    const col = ['#ff5ad7', '#5ad7ff', '#ffe45a', '#7dff8a', '#ff8a5a', '#b05aff'][i];
+    g += `<path transform="translate(540,380) rotate(${a})" d="M0,0 L-70,1500 L70,1500Z" fill="${col}" opacity=".13"/>`;
+  }
+  // palms
+  const palm = (x, f) => `<g transform="translate(${x},1350) scale(${f},1)"><path d="M0,0 Q20,-260 60,-470" stroke="#1a0b2e" stroke-width="26" fill="none"/>${[-60, -20, 20, 60, 110].map(a => `<path transform="translate(60,-470) rotate(${a + Math.sin(t * 3) * 4})" d="M0,0 Q90,-40 180,30 Q90,-10 0,0Z" fill="#1a0b2e"/>`).join('')}</g>`;
+  g += palm(-20, 1) + palm(1100, -1);
+  // disco ball
+  g += `<path d="M540,330 L540,380" stroke="#ddd" stroke-width="4"/><circle cx="540" cy="430" r="55" fill="url(#ball)"/>`;
+  for (let i = 0; i < 12; i++) g += `<rect x="${500 + (i % 4) * 20 + ((t * 40) % 20)}" y="${395 + Math.floor(i / 4) * 22}" width="12" height="12" fill="#fff" opacity="${0.3 + 0.6 * rnd(i + Math.floor(t * 8))}"/>`;
+  // background twinkles
+  for (let i = 0; i < 26; i++) {
+    const tw = 0.5 + 0.5 * Math.sin(t * 6 + i * 1.7);
+    g += star(rnd(i * 5) * W, 360 + rnd(i * 9) * 800, 8 + tw * 14, '#fff', tw * 0.9);
+  }
+  // tagline
+  const tk = easeBack(prog(t, 12.3, 12.65)), tk2 = easeBack(prog(t, 12.55, 12.9));
+  const pulse = 1 + 0.04 * Math.sin(lt * Math.PI * 4);
+  g += `<g transform="translate(540,600) scale(${tk * pulse})">${txt(0, 0, '수익률은 출렁여도,', { size: 86, fill: '#fff', font: 'bh', stroke: '#2b0f54', sw: 16 })}</g>`;
+  const wA = mw('우리 흥은 ', 96, 'Black Han Sans'), wB = mw('상한가!', 112, 'Black Han Sans'), xs = -(wA + wB) / 2;
+  g += `<g transform="translate(540,730) scale(${tk2 * pulse}) rotate(-2)"><text x="${xs}" y="0" dominant-baseline="middle" class="bh" stroke-linejoin="round" paint-order="stroke"><tspan font-size="96" fill="#fff" stroke="#2b0f54" stroke-width="16">우리 흥은 </tspan><tspan font-size="112" fill="#ff2e63" stroke="#fff" stroke-width="14">상한가!</tspan></text>
+     <path d="M${xs + wA + wB + 22},-10 L${xs + wA + wB + 22},-80 M${xs + wA + wB + 2},-58 L${xs + wA + wB + 22},-82 L${xs + wA + wB + 42},-58" stroke="#ff2e63" stroke-width="12" stroke-linecap="round" fill="none" opacity="${prog(t, 12.8, 13)}"/></g>`;
+  // dancers
+  const order = ['다솜', '지형', '현영', '미선', '미연', '민현', '정빈', '혜숙'];
+  const finalOn = t >= 14.25;
+  const fk = easeOut(prog(t, 14.1, 14.3));
+  order.forEach((nm, i) => {
+    const back = i < 4;
+    const x = back ? 195 + i * 230 : 110 + (i - 4) * 287, y = back ? 1420 : 1720, s = back ? 0.52 : 0.58;
+    let beatT = lt / BEAT;
+    if (nm === '지형') beatT -= 1; // one beat late
+    const bi = Math.max(0, Math.floor(beatT)), bf = beatT - Math.floor(beatT);
+    const variant = (i * 2 + (nm === '지형' ? 1 : 0)) % POSES.length;
+    const p0 = POSES[(bi + variant) % POSES.length], p1 = POSES[(bi + 1 + variant) % POSES.length];
+    const m = easeInOut(clamp(bf * 2.2));
+    let aL = [lerp(p0[0][0], p1[0][0], m), lerp(p0[0][1], p1[0][1], m)];
+    let aR = [lerp(p0[1][0], p1[1][0], m), lerp(p0[1][1], p1[1][1], m)];
+    let hip = lerp(p0[2], p1[2], m), tilt = lerp(p0[3], p1[3], m);
+    if (t > 14.0) { // converge to the shared final move
+      aL = [lerp(aL[0], FINAL[0][0], fk), lerp(aL[1], FINAL[0][1], fk)];
+      aR = [lerp(aR[0], FINAL[1][0], fk), lerp(aR[1], FINAL[1][1], fk)];
+      hip = lerp(hip, FINAL[2], fk); tilt = lerp(tilt, FINAL[3], fk);
+    }
+    const bounce = finalOn ? 0 : -Math.abs(Math.sin(beatT * Math.PI)) * 34;
+    // eye contact: look toward a neighbour, alternating each beat
+    const look = finalOn ? 0 : ((bi + i) % 2 ? 1 : -1);
+    const intro = easeBack(prog(t, 12.0 + i * 0.03, 12.3 + i * 0.03));
+    g += `<g transform="translate(${x},${y}) scale(${intro}) translate(${-x},${-y})">` + person(nm, t, {
+      x, y, s, armL: aL, armR: aR, hip, tilt: tilt + look * 4, bob: bounce, look,
+      eyes: finalOn ? 'happy' : (nm === '지형' && bi % 2 ? 'wow' : 'open'), mouth: finalOn ? 'grin' : 'smile',
+      sparkle: true, sunglasses: nm === '혜숙' ? easeOut(prog(t, 12.3, 12.7)) : null, redLip: nm === '민현',
+      tagY: 48,
+    }) + `</g>`;
+    if (nm === '미연' && !finalOn && t > 12.2) {
+      const cnt = ['하나!', '둘!', '셋!', '넷!'][bi % 4];
+      g += `<g transform="translate(${x + 95},${y - 400}) scale(${1 + 0.25 * (1 - bf)})"><rect x="-75" y="-34" width="150" height="68" rx="34" fill="#ffd76a" stroke="#2b0f54" stroke-width="5"/>${txt(0, 3, cnt, { size: 40, fill: '#2b0f54' })}</g>`;
+    }
+    if (nm === '지형' && !finalOn && t > 12.6 && bi % 2) g += txt(x - 70, y - 340, '어?', { size: 40, fill: '#fff', stroke: '#2b0f54', sw: 8 });
+  });
+  // final unison flash + badge
+  if (t >= 14.25) {
+    const ff = 1 - prog(t, 14.25, 14.55);
+    g += `<rect width="${W}" height="${H}" fill="#fff" opacity="${ff * 0.7}"/>`;
+    const bk = easeBack(prog(t, 14.3, 14.6));
+    g += `<g transform="translate(540,870) scale(${bk}) rotate(-4)"><rect x="-290" y="-70" width="580" height="140" rx="70" fill="#ffcc33" stroke="#2b0f54" stroke-width="8"/>${keyIcon(-200, 0, 1.3)}${txt(40, 6, '59팀 골든키', { size: 78, fill: '#2b0f54', font: 'bh' })}</g>`;
+    g += txt(540, 985, '전원 일치!', { size: 52, fill: '#fff', font: 'bh', stroke: '#ff2e63', sw: 10, extra: `opacity="${prog(t, 14.4, 14.6)}"` });
+    for (let i = 0; i < 16; i++) {
+      const a = i / 16 * Math.PI * 2, r = 200 + prog(t, 14.25, 15) * 380;
+      g += star(540 + Math.cos(a) * r, 870 + Math.sin(a) * r * 0.8, 22, i % 2 ? '#ffd76a' : '#fff', 1 - prog(t, 14.6, 15));
+    }
+  }
+  return g;
+}
+
+function transition(t) {
+  // quick diagonal swipe centred on each scene boundary
+  let g = '';
+  for (const b of [3, 6, 9, 12]) {
+    const k = prog(t, b - 0.18, b + 0.18);
+    if (k <= 0 || k >= 1) continue;
+    const x = lerp(-1700, 1500, easeInOut(k));
+    const col = { 3: '#ff5a5f', 6: '#3a86ff', 9: '#9b5de5', 12: '#ffcc33' }[b];
+    g += `<g transform="translate(${x},0) skewX(-18)"><rect x="0" y="0" width="900" height="${H}" fill="${col}"/><rect x="900" y="0" width="80" height="${H}" fill="#fff"/></g>`;
+  }
+  if (t >= 11.9 && t < 12.15) g += `<rect width="${W}" height="${H}" fill="#fff" opacity="${1 - Math.abs(t - 12) * 6}"/>`;
+  return g;
+}
+
+function render(t) {
+  let g;
+  if (t < 3) g = scene1(t);
+  else if (t < 6) g = scene2(t);
+  else if (t < 9) g = scene3(t);
+  else if (t < 12) g = scene4(t);
+  else g = scene5(t);
+  // global zoom pulse
+  g += titleBar(t, t >= 12);
+  g += transition(t);
+  document.getElementById('stage').innerHTML = g;
+}
+window.render = render;
+const q = new URLSearchParams(location.search);
+render(parseFloat(q.get('t') || '0'));
+</script>
+</body>
+</html>
